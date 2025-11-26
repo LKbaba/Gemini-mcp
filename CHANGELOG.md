@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-11-26
+
+### 🚀 File System Access & Tool Enhancement
+
+This version adds direct file system access to tools, eliminating the need to pass file contents as parameters.
+
+### Added
+
+- **File System Access Module** (`src/utils/file-reader.ts`):
+  - `readFile()` - Read single file with language detection
+  - `readFiles()` - Batch read multiple files
+  - `readDirectory()` - Read entire directory with glob filtering
+  - Automatic binary file detection and exclusion
+
+- **Security Module** (`src/utils/security.ts`):
+  - Path traversal attack prevention using `path.relative`
+  - Sensitive file protection (`.env`, `.ssh`, credentials, etc.)
+  - Directory whitelist validation
+  - Symlink detection
+  - File size and count limits
+
+- **New Tool Parameters**:
+  - `analyze_codebase`: `directory`, `filePaths`, `include`, `exclude`
+  - `analyze_content`: `filePath` with auto language detection
+  - `generate_ui`: `techContext`, `configPath` for tech stack context
+  - `fix_ui_from_screenshot`: `sourceCodePath`, `relatedFiles`
+  - `brainstorm`: `contextFilePath`, `contextFiles` for project context
+
+- **Structured Model Information** in `list_models`:
+  - `capabilities`: Detailed capability flags (vision, function calling, etc.)
+  - `useCases`: Recommended use cases in Chinese
+  - `recommendations`: Model recommendations by scenario
+
+### Changed
+
+- **Security Improvements**:
+  - Fixed directory whitelist bypass vulnerability (prefix matching issue)
+  - Fixed path traversal detection to allow legitimate filenames like `vendor..lib.js`
+  - Using `path.relative` for safer path validation
+
+- All tools maintain **backward compatibility** with existing parameters
+
+### Dependencies
+
+- Added `micromatch` for glob pattern matching
+- Added `fast-glob` for directory traversal
+
+---
+
 ## [1.0.1] - 2025-11-26
 
 ### 🎉 Major Rewrite - LKbaba Specialized Version

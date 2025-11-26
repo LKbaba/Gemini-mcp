@@ -14,8 +14,18 @@ export const SUPPORTED_MODELS = {
         description: 'Latest and most powerful model, #1 on WebDev Arena for UI generation',
         contextWindow: 1_048_576, // 1M tokens
         outputLimit: 65_536,
+        capabilities: {
+            maxInputTokens: 1_048_576,
+            maxOutputTokens: 65_536,
+            supportsVision: true,
+            supportsFunctionCalling: true,
+            supportsStreaming: true,
+            supportsThinking: true,
+            supportsSystemInstructions: true
+        },
         features: ['thinking', 'multimodal', 'function_calling', 'grounding', 'system_instructions'],
         bestFor: ['UI generation', 'Frontend development', 'Design to code', 'Interactive animations', 'Complex reasoning'],
+        useCases: ['UI 生成', '前端开发', '设计稿转代码', '交互动画', '复杂推理'],
         thinking: true,
         lastUpdate: 'November 2025',
         isDefault: true
@@ -26,8 +36,18 @@ export const SUPPORTED_MODELS = {
         description: 'Stable production model with excellent coding capabilities',
         contextWindow: 1_048_576, // 1M tokens
         outputLimit: 65_536,
+        capabilities: {
+            maxInputTokens: 1_048_576,
+            maxOutputTokens: 65_536,
+            supportsVision: true,
+            supportsFunctionCalling: true,
+            supportsStreaming: true,
+            supportsThinking: true,
+            supportsSystemInstructions: true
+        },
         features: ['thinking', 'multimodal', 'function_calling', 'grounding', 'system_instructions'],
         bestFor: ['General coding', 'Large codebase analysis', 'Fallback option'],
+        useCases: ['通用编码', '大型代码库分析', '代码审查', '文档生成'],
         thinking: true,
         lastUpdate: 'June 2025',
         isDefault: false
@@ -38,8 +58,18 @@ export const SUPPORTED_MODELS = {
         description: 'Fast and cost-effective model with best price/performance ratio',
         contextWindow: 1_048_576, // 1M tokens
         outputLimit: 65_536,
+        capabilities: {
+            maxInputTokens: 1_048_576,
+            maxOutputTokens: 65_536,
+            supportsVision: true,
+            supportsFunctionCalling: true,
+            supportsStreaming: true,
+            supportsThinking: true,
+            supportsSystemInstructions: true
+        },
         features: ['thinking', 'multimodal', 'function_calling', 'grounding', 'system_instructions'],
         bestFor: ['High-frequency tasks', 'Batch processing', 'Cost optimization'],
+        useCases: ['快速问答', '实时分析', '批量处理', '成本优化'],
         thinking: true,
         lastUpdate: 'June 2025',
         isDefault: false
@@ -50,8 +80,18 @@ export const SUPPORTED_MODELS = {
         description: 'Ultra-fast and most cost-efficient model for simple tasks',
         contextWindow: 1_048_576, // 1M tokens
         outputLimit: 65_536,
+        capabilities: {
+            maxInputTokens: 1_048_576,
+            maxOutputTokens: 65_536,
+            supportsVision: true,
+            supportsFunctionCalling: true,
+            supportsStreaming: true,
+            supportsThinking: true,
+            supportsSystemInstructions: true
+        },
         features: ['thinking', 'multimodal', 'function_calling', 'system_instructions'],
         bestFor: ['Simple queries', 'Quick prototypes', 'Maximum cost savings'],
+        useCases: ['简单查询', '快速验证', '低延迟场景', '最大成本节省'],
         thinking: true,
         lastUpdate: 'July 2025',
         isDefault: false

@@ -31,10 +31,55 @@ Claude Code excels at code planning, architecture design, and code review. But f
 | `gemini_multimodal_query` | Analyze images with natural language queries | 🔴 P0 |
 | `gemini_fix_ui_from_screenshot` | Diagnose and fix UI issues from screenshots | 🔴 P0 |
 | `gemini_create_animation` | Create interactive animations (CSS/Canvas/WebGL/Three.js) | 🔴 P0 |
-| `gemini_analyze_content` | Analyze code, documents, or data | 🟡 P1 |
-| `gemini_analyze_codebase` | Analyze entire codebase (1M token context) | 🟡 P1 |
-| `gemini_brainstorm` | Generate creative ideas with feasibility assessment | 🟢 P2 |
-| `list_models` | List available Gemini models | 🟢 P2 |
+| `gemini_analyze_content` | Analyze code, documents, or data (supports file path) | 🟡 P1 |
+| `gemini_analyze_codebase` | Analyze entire codebase (supports directory path) | 🟡 P1 |
+| `gemini_brainstorm` | Generate creative ideas with project context | 🟢 P2 |
+| `list_models` | List available Gemini models with capabilities | 🟢 P2 |
+
+### v1.1.0 New Features
+
+#### Direct File System Access
+
+Tools can now read files directly from the file system, no need to pass file contents:
+
+| Tool | New Parameters |
+|------|----------------|
+| `analyze_codebase` | `directory`, `filePaths`, `include`, `exclude` |
+| `analyze_content` | `filePath` |
+| `generate_ui` | `techContext`, `configPath` |
+| `fix_ui_from_screenshot` | `sourceCodePath`, `relatedFiles` |
+| `brainstorm` | `contextFilePath`, `contextFiles` |
+
+#### Tech Stack Context
+
+`generate_ui` now supports technology stack context for generating code that matches your project:
+
+```json
+{
+  "description": "User login form",
+  "framework": "react",
+  "techContext": {
+    "cssFramework": "tailwind",
+    "uiLibrary": "shadcn",
+    "typescript": true
+  }
+}
+```
+
+Or auto-detect from `package.json`:
+```json
+{
+  "description": "User login form",
+  "configPath": "./package.json"
+}
+```
+
+#### Structured Model Information
+
+`list_models` now returns detailed capability information:
+- `capabilities`: maxInputTokens, supportsVision, supportsFunctionCalling, etc.
+- `useCases`: Recommended use cases in Chinese
+- `recommendations`: Model recommendations by scenario
 
 ### Supported Models
 
@@ -193,22 +238,24 @@ npm start
 ```
 src/
 ├── config/
-│   ├── models.ts        # 模型配置
+│   ├── models.ts        # 模型配置（含能力信息）
 │   └── constants.ts     # 全局常量
 ├── tools/
 │   ├── definitions.ts   # MCP 工具定义
-│   ├── generate-ui.ts   # UI 生成
+│   ├── generate-ui.ts   # UI 生成（支持技术栈上下文）
 │   ├── multimodal-query.ts  # 多模态查询
-│   ├── fix-ui.ts        # UI 修复
+│   ├── fix-ui.ts        # UI 修复（支持源代码路径）
 │   ├── create-animation.ts  # 动画创建
-│   ├── analyze-content.ts   # 内容分析
-│   ├── analyze-codebase.ts  # 代码库分析
-│   ├── brainstorm.ts    # 头脑风暴
-│   └── list-models.ts   # 模型列表
+│   ├── analyze-content.ts   # 内容分析（支持文件路径）
+│   ├── analyze-codebase.ts  # 代码库分析（支持目录路径）
+│   ├── brainstorm.ts    # 头脑风暴（支持项目上下文）
+│   └── list-models.ts   # 模型列表（结构化输出）
 ├── utils/
 │   ├── gemini-client.ts # Gemini API 客户端
 │   ├── error-handler.ts # 错误处理
-│   └── validators.ts    # 参数验证
+│   ├── validators.ts    # 参数验证
+│   ├── security.ts      # 安全验证模块（新增）
+│   └── file-reader.ts   # 文件读取工具（新增）
 ├── types.ts             # 类型定义
 └── server.ts            # 主服务器
 ```

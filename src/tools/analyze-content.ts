@@ -2,6 +2,10 @@
  * Tool 5: gemini_analyze_content
  * 通用内容分析工具 - 分析代码片段、文档、数据
  * Priority: P1 - Phase 3
+ *
+ * 升级说明（v1.1）:
+ * - 新增 filePath 参数：支持直接传入文件路径，工具自动读取内容
+ * - 保留 content 参数：向后兼容原有调用方式
  */
 
 import { GeminiClient } from '../utils/gemini-client.js';
@@ -11,6 +15,8 @@ import {
   validateArray
 } from '../utils/validators.js';
 import { handleAPIError, logError } from '../utils/error-handler.js';
+import { readFile, FileContent } from '../utils/file-reader.js';
+import { SecurityError } from '../utils/security.js';
 
 // 内容分析系统提示词
 const ANALYZE_CONTENT_SYSTEM_PROMPT = `You are a versatile code and document analyst with expertise in:
@@ -56,7 +62,20 @@ When analyzing data:
 
 // 参数接口
 export interface AnalyzeContentParams {
-  content: string;
+  // ===== 输入方式（二选一）=====
+
+  /**
+   * 方式1：直接传入内容【保留，向后兼容】
+   */
+  content?: string;
+
+  /**
+   * 方式2：传入文件路径【新增】
+   * 工具会自动读取文件内容并检测语言
+   */
+  filePath?: string;
+
+  // ===== 其他参数（保持不变）=====
   type?: 'code' | 'document' | 'data' | 'auto';
   task?: 'summarize' | 'review' | 'explain' | 'optimize' | 'debug';
   language?: string;
@@ -152,12 +171,18 @@ function detectContentType(content: string, language?: string): 'code' | 'docume
 
 /**
  * 构建分析提示词
+ * @param params 参数对象
+ * @param detectedType 检测到的内容类型
+ * @param task 分析任务
+ * @param outputFormat 输出格式
+ * @param contentToAnalyze 要分析的内容（由调用方提供，已从文件读取或直接传入）
  */
 function buildAnalysisPrompt(
   params: AnalyzeContentParams,
   detectedType: string,
   task: string,
-  outputFormat: string
+  outputFormat: string,
+  contentToAnalyze: string
 ): string {
   let prompt = `# Content Analysis Task\n\n`;
 
@@ -209,22 +234,34 @@ function buildAnalysisPrompt(
     prompt += `Provide plain text output.\n\n`;
   }
 
-  prompt += `## Content to Analyze\n\`\`\`\n${params.content}\n\`\`\``;
+  prompt += `## Content to Analyze\n\`\`\`\n${contentToAnalyze}\n\`\`\``;
 
   return prompt;
 }
 
 /**
  * 处理 gemini_analyze_content 工具调用
+ *
+ * 支持两种输入方式（优先级：filePath > content）：
+ * 1. filePath: 传入文件路径，自动读取文件内容
+ * 2. content: 直接传入内容（向后兼容）
  */
 export async function handleAnalyzeContent(
   params: AnalyzeContentParams,
   client: GeminiClient
 ): Promise<AnalyzeContentResult> {
   try {
-    // 参数验证
-    validateRequired(params.content, 'content');
-    validateString(params.content, 'content', 10);
+    // ===== 1. 参数验证 =====
+    const hasFilePath = !!params.filePath;
+    const hasContent = !!params.content;
+
+    // 验证至少提供一种输入方式
+    if (!hasFilePath && !hasContent) {
+      throw new Error(
+        '必须提供 filePath 或 content 参数之一。' +
+        '请使用 filePath 传入文件路径，或使用 content 直接传入内容。'
+      );
+    }
 
     // 验证可选枚举参数
     const validTypes = ['code', 'document', 'data', 'auto'];
@@ -245,18 +282,58 @@ export async function handleAnalyzeContent(
       validateArray(params.focus, 'focus', 1);
     }
 
-    // 设置默认值
+    // ===== 2. 获取内容 =====
+    let contentToAnalyze: string;
+    let detectedLanguage: string | undefined = params.language;
+
+    if (hasFilePath) {
+      // 方式1：从文件读取内容
+      console.log(`[analyze_content] 正在读取文件: ${params.filePath}`);
+
+      try {
+        const fileContent = await readFile(params.filePath!);
+        contentToAnalyze = fileContent.content;
+
+        // 如果没有指定语言，使用检测到的语言
+        if (!detectedLanguage && fileContent.language) {
+          detectedLanguage = fileContent.language;
+        }
+
+        console.log(`[analyze_content] 成功读取文件，大小: ${fileContent.size} 字节`);
+
+      } catch (error) {
+        if (error instanceof SecurityError) {
+          throw new Error(`安全验证失败: ${error.message}`);
+        }
+        throw error;
+      }
+
+    } else {
+      // 方式2：直接使用 content 参数（向后兼容）
+      validateRequired(params.content, 'content');
+      validateString(params.content!, 'content', 10);
+      contentToAnalyze = params.content!;
+    }
+
+    // ===== 3. 设置默认值并检测类型 =====
     const type = params.type || 'auto';
     const task = params.task || 'summarize';
     const outputFormat = params.outputFormat || 'markdown';
 
     // 自动检测内容类型
     const detectedType = type === 'auto'
-      ? detectContentType(params.content, params.language)
+      ? detectContentType(contentToAnalyze, detectedLanguage)
       : type;
 
-    // 构建提示词
-    const prompt = buildAnalysisPrompt(params, detectedType, task, outputFormat);
+    // ===== 4. 构建提示词 =====
+    // 创建临时参数对象用于构建提示词
+    const promptParams: AnalyzeContentParams = {
+      ...params,
+      content: contentToAnalyze,
+      language: detectedLanguage
+    };
+
+    const prompt = buildAnalysisPrompt(promptParams, detectedType, task, outputFormat, contentToAnalyze);
 
     // 调用 Gemini API（使用默认模型 gemini-3-pro-preview）
     const response = await client.generate(prompt, {

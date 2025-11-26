@@ -2,9 +2,17 @@
  * Tool 6: gemini_analyze_codebase
  * 代码库分析工具 - 利用 1M token 上下文分析整个代码库
  * Priority: P1 - Phase 3
+ *
+ * 升级说明（v1.1）:
+ * - 新增 directory 参数：支持直接传入目录路径
+ * - 新增 filePaths 参数：支持传入文件路径列表
+ * - 新增 include/exclude 参数：支持 glob 模式过滤
+ * - 保留 files 参数：向后兼容原有调用方式
  */
 import { validateRequired, validateArray } from '../utils/validators.js';
 import { handleAPIError, logError } from '../utils/error-handler.js';
+import { readDirectory, readFiles } from '../utils/file-reader.js';
+import { SecurityError } from '../utils/security.js';
 // 代码库分析系统提示词
 const CODEBASE_ANALYSIS_SYSTEM_PROMPT = `You are a senior software architect with expertise in:
 - System architecture and design patterns
@@ -166,7 +174,7 @@ function buildCodebasePrompt(params, metrics, outputFormat) {
 - Add a Mermaid diagram for architecture visualization\n\n`;
     }
     prompt += `## Files to Analyze\n\n`;
-    // 添加所有文件内容
+    // 添加所有文件内容（此处 params.files 在调用前已确保有值）
     for (const file of params.files) {
         const language = detectLanguage(file.path);
         prompt += `### ${file.path} (${language})\n`;
@@ -177,22 +185,32 @@ function buildCodebasePrompt(params, metrics, outputFormat) {
     return prompt;
 }
 /**
+ * 将 FileContent 数组转换为内部文件格式
+ */
+function convertFileContents(fileContents) {
+    return fileContents.map(fc => ({
+        path: fc.path,
+        content: fc.content
+    }));
+}
+/**
  * 处理 gemini_analyze_codebase 工具调用
+ *
+ * 支持三种输入方式（优先级：directory > filePaths > files）：
+ * 1. directory: 传入目录路径，自动读取目录下的文件
+ * 2. filePaths: 传入文件路径列表，自动读取这些文件
+ * 3. files: 直接传入文件内容数组（向后兼容）
  */
 export async function handleAnalyzeCodebase(params, client) {
     try {
-        // 参数验证
-        validateRequired(params.files, 'files');
-        validateArray(params.files, 'files', 1);
-        // 验证每个文件都有 path 和 content
-        for (let i = 0; i < params.files.length; i++) {
-            const file = params.files[i];
-            if (!file.path || typeof file.path !== 'string') {
-                throw new Error(`File at index ${i} is missing required 'path' property`);
-            }
-            if (!file.content || typeof file.content !== 'string') {
-                throw new Error(`File at index ${i} is missing required 'content' property`);
-            }
+        // ===== 1. 参数验证 =====
+        const hasDirectory = !!params.directory;
+        const hasFilePaths = params.filePaths && params.filePaths.length > 0;
+        const hasFiles = params.files && params.files.length > 0;
+        // 验证至少提供一种输入方式
+        if (!hasDirectory && !hasFilePaths && !hasFiles) {
+            throw new Error('必须提供 directory、filePaths 或 files 参数之一。' +
+                '请使用 directory 传入目录路径，filePaths 传入文件路径列表，或 files 传入文件内容数组。');
         }
         // 验证可选枚举参数
         const validFocusAreas = ['architecture', 'security', 'performance', 'dependencies', 'patterns'];
@@ -203,23 +221,88 @@ export async function handleAnalyzeCodebase(params, client) {
         if (params.outputFormat && !validFormats.includes(params.outputFormat)) {
             throw new Error(`Invalid outputFormat: ${params.outputFormat}. Must be one of: ${validFormats.join(', ')}`);
         }
-        // 设置默认值
+        // ===== 2. 获取文件内容 =====
+        let filesToAnalyze;
+        if (hasDirectory) {
+            // 方式1：从目录读取文件
+            console.log(`[analyze_codebase] 正在读取目录: ${params.directory}`);
+            try {
+                const fileContents = await readDirectory(params.directory, {
+                    include: params.include,
+                    exclude: params.exclude
+                });
+                if (fileContents.length === 0) {
+                    throw new Error(`目录 "${params.directory}" 中没有找到匹配的文件。` +
+                        (params.include ? ` 包含模式: ${params.include.join(', ')}` : '') +
+                        (params.exclude ? ` 排除模式: ${params.exclude.join(', ')}` : ''));
+                }
+                filesToAnalyze = convertFileContents(fileContents);
+                console.log(`[analyze_codebase] 成功读取 ${filesToAnalyze.length} 个文件`);
+            }
+            catch (error) {
+                // 处理安全错误
+                if (error instanceof SecurityError) {
+                    throw new Error(`安全验证失败: ${error.message}`);
+                }
+                throw error;
+            }
+        }
+        else if (hasFilePaths) {
+            // 方式2：从文件路径列表读取
+            console.log(`[analyze_codebase] 正在读取 ${params.filePaths.length} 个文件`);
+            try {
+                const fileContents = await readFiles(params.filePaths);
+                if (fileContents.length === 0) {
+                    throw new Error('所有指定的文件都无法读取，请检查文件路径是否正确。');
+                }
+                filesToAnalyze = convertFileContents(fileContents);
+                console.log(`[analyze_codebase] 成功读取 ${filesToAnalyze.length} 个文件`);
+            }
+            catch (error) {
+                if (error instanceof SecurityError) {
+                    throw new Error(`安全验证失败: ${error.message}`);
+                }
+                throw error;
+            }
+        }
+        else {
+            // 方式3：直接使用 files 参数（向后兼容）
+            validateRequired(params.files, 'files');
+            validateArray(params.files, 'files', 1);
+            // 验证每个文件都有 path 和 content
+            for (let i = 0; i < params.files.length; i++) {
+                const file = params.files[i];
+                if (!file.path || typeof file.path !== 'string') {
+                    throw new Error(`File at index ${i} is missing required 'path' property`);
+                }
+                if (!file.content || typeof file.content !== 'string') {
+                    throw new Error(`File at index ${i} is missing required 'content' property`);
+                }
+            }
+            filesToAnalyze = params.files;
+        }
+        // ===== 3. 设置默认值并计算指标 =====
         const outputFormat = params.outputFormat || 'markdown';
         const deepThink = params.deepThink || false;
         // 计算代码库指标
         const languages = new Set();
         let totalLines = 0;
-        for (const file of params.files) {
+        for (const file of filesToAnalyze) {
             languages.add(detectLanguage(file.path));
             totalLines += file.content.split('\n').length;
         }
         const metrics = {
-            totalFiles: params.files.length,
+            totalFiles: filesToAnalyze.length,
             totalLines,
             languages: Array.from(languages).filter(l => l !== 'Unknown')
         };
-        // 构建提示词
-        const prompt = buildCodebasePrompt(params, metrics, outputFormat);
+        // ===== 4. 构建提示词并调用 API =====
+        // 创建临时参数对象用于构建提示词
+        const promptParams = {
+            ...params,
+            files: filesToAnalyze
+        };
+        const prompt = buildCodebasePrompt(promptParams, metrics, outputFormat);
         // 调用 Gemini API（使用默认模型 gemini-3-pro-preview）
         // Deep Think 模式使用更高的温度以获得更深入的分析
         const response = await client.generate(prompt, {
@@ -227,7 +310,7 @@ export async function handleAnalyzeCodebase(params, client) {
             temperature: deepThink ? 0.7 : 0.5,
             maxTokens: 16384 // 更大的输出 token 限制
         });
-        // 构建返回结果
+        // ===== 5. 构建返回结果 =====
         const result = {
             summary: '',
             findings: [],
