@@ -1,13 +1,13 @@
 /**
  * Tool 6: gemini_analyze_codebase
- * 代码库分析工具 - 利用 1M token 上下文分析整个代码库
+ * Codebase analysis tool - Leveraging 1M token context to analyze entire codebase
  * Priority: P1 - Phase 3
  *
- * 升级说明（v1.1）:
- * - 新增 directory 参数：支持直接传入目录路径
- * - 新增 filePaths 参数：支持传入文件路径列表
- * - 新增 include/exclude 参数：支持 glob 模式过滤
- * - 保留 files 参数：向后兼容原有调用方式
+ * Upgrade notes (v1.1):
+ * - Added directory parameter: Support direct directory path input
+ * - Added filePaths parameter: Support file path list input
+ * - Added include/exclude parameters: Support glob pattern filtering
+ * - Retained files parameter: Backward compatible with original usage
  */
 
 import { GeminiClient } from '../utils/gemini-client.js';
@@ -23,7 +23,7 @@ import {
 } from '../utils/file-reader.js';
 import { SecurityError } from '../utils/security.js';
 
-// 代码库分析系统提示词
+// Codebase analysis system prompt
 const CODEBASE_ANALYSIS_SYSTEM_PROMPT = `You are a senior software architect with expertise in:
 - System architecture and design patterns
 - Code quality and best practices
@@ -56,50 +56,50 @@ Output quality:
 - Visualize architecture with Mermaid diagrams
 - Focus on high-impact findings`;
 
-// 参数接口
+// Parameter interface
 export interface AnalyzeCodebaseParams {
-  // ===== 输入方式（三选一）=====
+  // ===== Input methods (choose one) =====
 
   /**
-   * 方式1：目录路径【新增】
-   * 直接传入目录路径，工具会自动读取目录下的文件
+   * Method 1: Directory path [NEW]
+   * Pass directory path directly, tool will automatically read files in the directory
    */
   directory?: string;
 
   /**
-   * glob 包含模式，仅与 directory 参数配合使用
-   * 例如: ["**\/*.ts", "**\/*.tsx"]
+   * Glob include patterns, only used with directory parameter
+   * Example: ["**\/*.ts", "**\/*.tsx"]
    */
   include?: string[];
 
   /**
-   * glob 排除模式，仅与 directory 参数配合使用
-   * 例如: ["node_modules/**", "**\/*.test.ts"]
+   * Glob exclude patterns, only used with directory parameter
+   * Example: ["node_modules/**", "**\/*.test.ts"]
    */
   exclude?: string[];
 
   /**
-   * 方式2：文件路径列表【新增】
-   * 传入文件路径列表，工具会自动读取这些文件
+   * Method 2: File path list [NEW]
+   * Pass file path list, tool will automatically read these files
    */
   filePaths?: string[];
 
   /**
-   * 方式3：文件内容数组【保留，向后兼容】
-   * 直接传入文件内容，无需工具读取
+   * Method 3: File content array [RETAINED, backward compatible]
+   * Pass file content directly, no need for tool to read
    */
   files?: Array<{
     path: string;
     content: string;
   }>;
 
-  // ===== 其他参数（保持不变）=====
+  // ===== Other parameters (unchanged) =====
   focus?: 'architecture' | 'security' | 'performance' | 'dependencies' | 'patterns';
   deepThink?: boolean;
   outputFormat?: 'markdown' | 'json';
 }
 
-// 返回接口
+// Return interface
 export interface AnalyzeCodebaseResult {
   summary: string;
   findings: Array<{
@@ -120,7 +120,7 @@ export interface AnalyzeCodebaseResult {
 }
 
 /**
- * 检测文件的编程语言
+ * Detect programming language of file
  */
 function detectLanguage(filePath: string): string {
   const ext = filePath.split('.').pop()?.toLowerCase() || '';
@@ -164,7 +164,7 @@ function detectLanguage(filePath: string): string {
 }
 
 /**
- * 构建代码库分析提示词
+ * Build codebase analysis prompt
  */
 function buildCodebasePrompt(
   params: AnalyzeCodebaseParams,
@@ -257,7 +257,7 @@ function buildCodebasePrompt(
 
   prompt += `## Files to Analyze\n\n`;
 
-  // 添加所有文件内容（此处 params.files 在调用前已确保有值）
+  // Add all file contents (params.files is guaranteed to have value before this call)
   for (const file of params.files!) {
     const language = detectLanguage(file.path);
     prompt += `### ${file.path} (${language})\n`;
@@ -270,7 +270,7 @@ function buildCodebasePrompt(
 }
 
 /**
- * 将 FileContent 数组转换为内部文件格式
+ * Convert FileContent array to internal file format
  */
 function convertFileContents(
   fileContents: FileContent[]
@@ -282,32 +282,32 @@ function convertFileContents(
 }
 
 /**
- * 处理 gemini_analyze_codebase 工具调用
+ * Handle gemini_analyze_codebase tool call
  *
- * 支持三种输入方式（优先级：directory > filePaths > files）：
- * 1. directory: 传入目录路径，自动读取目录下的文件
- * 2. filePaths: 传入文件路径列表，自动读取这些文件
- * 3. files: 直接传入文件内容数组（向后兼容）
+ * Supports three input methods (priority: directory > filePaths > files):
+ * 1. directory: Pass directory path, automatically read files in directory
+ * 2. filePaths: Pass file path list, automatically read these files
+ * 3. files: Pass file content array directly (backward compatible)
  */
 export async function handleAnalyzeCodebase(
   params: AnalyzeCodebaseParams,
   client: GeminiClient
 ): Promise<AnalyzeCodebaseResult> {
   try {
-    // ===== 1. 参数验证 =====
+    // ===== 1. Parameter validation =====
     const hasDirectory = !!params.directory;
     const hasFilePaths = params.filePaths && params.filePaths.length > 0;
     const hasFiles = params.files && params.files.length > 0;
 
-    // 验证至少提供一种输入方式
+    // Validate at least one input method is provided
     if (!hasDirectory && !hasFilePaths && !hasFiles) {
       throw new Error(
-        '必须提供 directory、filePaths 或 files 参数之一。' +
-        '请使用 directory 传入目录路径，filePaths 传入文件路径列表，或 files 传入文件内容数组。'
+        'One of directory, filePaths, or files parameter is required. ' +
+        'Use directory to pass a directory path, filePaths to pass a file path list, or files to pass a file content array.'
       );
     }
 
-    // 验证可选枚举参数
+    // Validate optional enum parameters
     const validFocusAreas = ['architecture', 'security', 'performance', 'dependencies', 'patterns'];
     const validFormats = ['markdown', 'json'];
 
@@ -318,12 +318,12 @@ export async function handleAnalyzeCodebase(
       throw new Error(`Invalid outputFormat: ${params.outputFormat}. Must be one of: ${validFormats.join(', ')}`);
     }
 
-    // ===== 2. 获取文件内容 =====
+    // ===== 2. Get file contents =====
     let filesToAnalyze: Array<{ path: string; content: string }>;
 
     if (hasDirectory) {
-      // 方式1：从目录读取文件
-      console.log(`[analyze_codebase] 正在读取目录: ${params.directory}`);
+      // Method 1: Read files from directory
+      console.log(`[analyze_codebase] Reading directory: ${params.directory}`);
 
       try {
         const fileContents = await readDirectory(params.directory!, {
@@ -333,50 +333,50 @@ export async function handleAnalyzeCodebase(
 
         if (fileContents.length === 0) {
           throw new Error(
-            `目录 "${params.directory}" 中没有找到匹配的文件。` +
-            (params.include ? ` 包含模式: ${params.include.join(', ')}` : '') +
-            (params.exclude ? ` 排除模式: ${params.exclude.join(', ')}` : '')
+            `No matching files found in directory "${params.directory}".` +
+            (params.include ? ` Include patterns: ${params.include.join(', ')}` : '') +
+            (params.exclude ? ` Exclude patterns: ${params.exclude.join(', ')}` : '')
           );
         }
 
         filesToAnalyze = convertFileContents(fileContents);
-        console.log(`[analyze_codebase] 成功读取 ${filesToAnalyze.length} 个文件`);
+        console.log(`[analyze_codebase] Successfully read ${filesToAnalyze.length} files`);
 
       } catch (error) {
-        // 处理安全错误
+        // Handle security errors
         if (error instanceof SecurityError) {
-          throw new Error(`安全验证失败: ${error.message}`);
+          throw new Error(`Security validation failed: ${error.message}`);
         }
         throw error;
       }
 
     } else if (hasFilePaths) {
-      // 方式2：从文件路径列表读取
-      console.log(`[analyze_codebase] 正在读取 ${params.filePaths!.length} 个文件`);
+      // Method 2: Read from file path list
+      console.log(`[analyze_codebase] Reading ${params.filePaths!.length} files`);
 
       try {
         const fileContents = await readFiles(params.filePaths!);
 
         if (fileContents.length === 0) {
-          throw new Error('所有指定的文件都无法读取，请检查文件路径是否正确。');
+          throw new Error('All specified files could not be read. Please check if file paths are correct.');
         }
 
         filesToAnalyze = convertFileContents(fileContents);
-        console.log(`[analyze_codebase] 成功读取 ${filesToAnalyze.length} 个文件`);
+        console.log(`[analyze_codebase] Successfully read ${filesToAnalyze.length} files`);
 
       } catch (error) {
         if (error instanceof SecurityError) {
-          throw new Error(`安全验证失败: ${error.message}`);
+          throw new Error(`Security validation failed: ${error.message}`);
         }
         throw error;
       }
 
     } else {
-      // 方式3：直接使用 files 参数（向后兼容）
+      // Method 3: Use files parameter directly (backward compatible)
       validateRequired(params.files, 'files');
       validateArray(params.files!, 'files', 1);
 
-      // 验证每个文件都有 path 和 content
+      // Validate each file has path and content
       for (let i = 0; i < params.files!.length; i++) {
         const file = params.files![i];
         if (!file.path || typeof file.path !== 'string') {
@@ -390,11 +390,11 @@ export async function handleAnalyzeCodebase(
       filesToAnalyze = params.files!;
     }
 
-    // ===== 3. 设置默认值并计算指标 =====
+    // ===== 3. Set defaults and calculate metrics =====
     const outputFormat = params.outputFormat || 'markdown';
     const deepThink = params.deepThink || false;
 
-    // 计算代码库指标
+    // Calculate codebase metrics
     const languages = new Set<string>();
     let totalLines = 0;
 
@@ -409,8 +409,8 @@ export async function handleAnalyzeCodebase(
       languages: Array.from(languages).filter(l => l !== 'Unknown')
     };
 
-    // ===== 4. 构建提示词并调用 API =====
-    // 创建临时参数对象用于构建提示词
+    // ===== 4. Build prompt and call API =====
+    // Create temporary params object for building prompt
     const promptParams: AnalyzeCodebaseParams = {
       ...params,
       files: filesToAnalyze
@@ -418,15 +418,15 @@ export async function handleAnalyzeCodebase(
 
     const prompt = buildCodebasePrompt(promptParams, metrics, outputFormat);
 
-    // 调用 Gemini API（使用默认模型 gemini-3-pro-preview）
-    // Deep Think 模式使用更高的温度以获得更深入的分析
+    // Call Gemini API (using default model gemini-3-pro-preview)
+    // Deep Think mode uses higher temperature for deeper analysis
     const response = await client.generate(prompt, {
       systemInstruction: CODEBASE_ANALYSIS_SYSTEM_PROMPT,
       temperature: deepThink ? 0.7 : 0.5,
-      maxTokens: 16384  // 更大的输出 token 限制
+      maxTokens: 16384  // Larger output token limit
     });
 
-    // ===== 5. 构建返回结果 =====
+    // ===== 5. Build return result =====
     const result: AnalyzeCodebaseResult = {
       summary: '',
       findings: [],
@@ -434,10 +434,10 @@ export async function handleAnalyzeCodebase(
       analysisDepth: deepThink ? 'deep' : 'standard'
     };
 
-    // 解析响应
+    // Parse response
     if (outputFormat === 'json') {
       try {
-        // 提取 JSON 内容
+        // Extract JSON content
         let jsonContent = response;
         const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
         if (jsonMatch) {
@@ -451,13 +451,13 @@ export async function handleAnalyzeCodebase(
           result.visualization = parsed.visualization;
         }
       } catch {
-        // JSON 解析失败，使用原始响应
+        // JSON parsing failed, use raw response
         result.summary = response;
       }
     } else {
       result.summary = response;
 
-      // 尝试提取 Mermaid 图
+      // Try to extract Mermaid diagram
       const mermaidMatch = response.match(/```mermaid\s*([\s\S]*?)```/);
       if (mermaidMatch) {
         result.visualization = mermaidMatch[1].trim();

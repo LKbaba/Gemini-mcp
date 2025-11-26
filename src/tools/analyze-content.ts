@@ -1,11 +1,11 @@
 /**
  * Tool 5: gemini_analyze_content
- * 通用内容分析工具 - 分析代码片段、文档、数据
+ * General content analysis tool - Analyze code snippets, documents, data
  * Priority: P1 - Phase 3
  *
- * 升级说明（v1.1）:
- * - 新增 filePath 参数：支持直接传入文件路径，工具自动读取内容
- * - 保留 content 参数：向后兼容原有调用方式
+ * Upgrade notes (v1.1):
+ * - Added filePath parameter: Support direct file path input, tool automatically reads content
+ * - Retained content parameter: Backward compatible with original calling method
  */
 
 import { GeminiClient } from '../utils/gemini-client.js';
@@ -18,7 +18,7 @@ import { handleAPIError, logError } from '../utils/error-handler.js';
 import { readFile, FileContent } from '../utils/file-reader.js';
 import { SecurityError } from '../utils/security.js';
 
-// 内容分析系统提示词
+// Content analysis system prompt
 const ANALYZE_CONTENT_SYSTEM_PROMPT = `You are a versatile code and document analyst with expertise in:
 - Code quality analysis (any programming language)
 - Document summarization and understanding
@@ -60,22 +60,22 @@ When analyzing data:
 - Suggest optimizations
 - Explain relationships`;
 
-// 参数接口
+// Parameter interface
 export interface AnalyzeContentParams {
-  // ===== 输入方式（二选一）=====
+  // ===== Input method (choose one) =====
 
   /**
-   * 方式1：直接传入内容【保留，向后兼容】
+   * Method 1: Direct content input [Retained, backward compatible]
    */
   content?: string;
 
   /**
-   * 方式2：传入文件路径【新增】
-   * 工具会自动读取文件内容并检测语言
+   * Method 2: File path input [New]
+   * Tool will automatically read file content and detect language
    */
   filePath?: string;
 
-  // ===== 其他参数（保持不变）=====
+  // ===== Other parameters (unchanged) =====
   type?: 'code' | 'document' | 'data' | 'auto';
   task?: 'summarize' | 'review' | 'explain' | 'optimize' | 'debug';
   language?: string;
@@ -83,7 +83,7 @@ export interface AnalyzeContentParams {
   outputFormat?: 'text' | 'json' | 'markdown';
 }
 
-// 返回接口
+// Return interface
 export interface AnalyzeContentResult {
   analysis: string;
   contentType: string;
@@ -98,36 +98,36 @@ export interface AnalyzeContentResult {
 }
 
 /**
- * 自动检测内容类型
+ * Auto-detect content type
  */
 function detectContentType(content: string, language?: string): 'code' | 'document' | 'data' {
-  // 如果指定了编程语言，认为是代码
+  // If programming language is specified, consider it as code
   if (language) {
     return 'code';
   }
 
   const trimmedContent = content.trim();
 
-  // 检查是否是 JSON/数据
+  // Check if it's JSON/data
   if (trimmedContent.startsWith('{') || trimmedContent.startsWith('[')) {
     try {
       JSON.parse(trimmedContent);
       return 'data';
     } catch {
-      // 不是有效 JSON，继续检查
+      // Not valid JSON, continue checking
     }
   }
 
-  // 检查 XML/HTML 数据
+  // Check XML/HTML data
   if (trimmedContent.startsWith('<?xml') || trimmedContent.match(/^<\w+[^>]*>/)) {
-    // 如果看起来像完整的 HTML 页面，可能是代码
+    // If it looks like a complete HTML page, it might be code
     if (trimmedContent.includes('<!DOCTYPE html>') || trimmedContent.includes('<script')) {
       return 'code';
     }
     return 'data';
   }
 
-  // 检查代码特征
+  // Check code characteristics
   const codePatterns = [
     /function\s+\w+\s*\(/,           // JavaScript/TypeScript function
     /const\s+\w+\s*=/,               // const declaration
@@ -158,24 +158,24 @@ function detectContentType(content: string, language?: string): 'code' | 'docume
     return 'code';
   }
 
-  // 检查是否包含大量代码相关符号
+  // Check if it contains a lot of code-related symbols
   const codeSymbols = (content.match(/[{}\[\]();=><]/g) || []).length;
   const totalChars = content.length;
   if (codeSymbols / totalChars > 0.05) {
     return 'code';
   }
 
-  // 默认为文档
+  // Default to document
   return 'document';
 }
 
 /**
- * 构建分析提示词
- * @param params 参数对象
- * @param detectedType 检测到的内容类型
- * @param task 分析任务
- * @param outputFormat 输出格式
- * @param contentToAnalyze 要分析的内容（由调用方提供，已从文件读取或直接传入）
+ * Build analysis prompt
+ * @param params Parameter object
+ * @param detectedType Detected content type
+ * @param task Analysis task
+ * @param outputFormat Output format
+ * @param contentToAnalyze Content to analyze (provided by caller, read from file or directly passed in)
  */
 function buildAnalysisPrompt(
   params: AnalyzeContentParams,
@@ -240,30 +240,30 @@ function buildAnalysisPrompt(
 }
 
 /**
- * 处理 gemini_analyze_content 工具调用
+ * Handle gemini_analyze_content tool call
  *
- * 支持两种输入方式（优先级：filePath > content）：
- * 1. filePath: 传入文件路径，自动读取文件内容
- * 2. content: 直接传入内容（向后兼容）
+ * Supports two input methods (priority: filePath > content):
+ * 1. filePath: Pass file path, automatically read file content
+ * 2. content: Direct content input (backward compatible)
  */
 export async function handleAnalyzeContent(
   params: AnalyzeContentParams,
   client: GeminiClient
 ): Promise<AnalyzeContentResult> {
   try {
-    // ===== 1. 参数验证 =====
+    // ===== 1. Parameter validation =====
     const hasFilePath = !!params.filePath;
     const hasContent = !!params.content;
 
-    // 验证至少提供一种输入方式
+    // Validate that at least one input method is provided
     if (!hasFilePath && !hasContent) {
       throw new Error(
-        '必须提供 filePath 或 content 参数之一。' +
-        '请使用 filePath 传入文件路径，或使用 content 直接传入内容。'
+        'One of filePath or content parameter is required. ' +
+        'Please use filePath to pass a file path, or use content to pass content directly.'
       );
     }
 
-    // 验证可选枚举参数
+    // Validate optional enum parameters
     const validTypes = ['code', 'document', 'data', 'auto'];
     const validTasks = ['summarize', 'review', 'explain', 'optimize', 'debug'];
     const validFormats = ['text', 'json', 'markdown'];
@@ -282,51 +282,51 @@ export async function handleAnalyzeContent(
       validateArray(params.focus, 'focus', 1);
     }
 
-    // ===== 2. 获取内容 =====
+    // ===== 2. Get content =====
     let contentToAnalyze: string;
     let detectedLanguage: string | undefined = params.language;
 
     if (hasFilePath) {
-      // 方式1：从文件读取内容
-      console.log(`[analyze_content] 正在读取文件: ${params.filePath}`);
+      // Method 1: Read content from file
+      console.log(`[analyze_content] Reading file: ${params.filePath}`);
 
       try {
         const fileContent = await readFile(params.filePath!);
         contentToAnalyze = fileContent.content;
 
-        // 如果没有指定语言，使用检测到的语言
+        // If no language specified, use detected language
         if (!detectedLanguage && fileContent.language) {
           detectedLanguage = fileContent.language;
         }
 
-        console.log(`[analyze_content] 成功读取文件，大小: ${fileContent.size} 字节`);
+        console.log(`[analyze_content] Successfully read file, size: ${fileContent.size} bytes`);
 
       } catch (error) {
         if (error instanceof SecurityError) {
-          throw new Error(`安全验证失败: ${error.message}`);
+          throw new Error(`Security validation failed: ${error.message}`);
         }
         throw error;
       }
 
     } else {
-      // 方式2：直接使用 content 参数（向后兼容）
+      // Method 2: Direct use of content parameter (backward compatible)
       validateRequired(params.content, 'content');
       validateString(params.content!, 'content', 10);
       contentToAnalyze = params.content!;
     }
 
-    // ===== 3. 设置默认值并检测类型 =====
+    // ===== 3. Set defaults and detect type =====
     const type = params.type || 'auto';
     const task = params.task || 'summarize';
     const outputFormat = params.outputFormat || 'markdown';
 
-    // 自动检测内容类型
+    // Auto-detect content type
     const detectedType = type === 'auto'
       ? detectContentType(contentToAnalyze, detectedLanguage)
       : type;
 
-    // ===== 4. 构建提示词 =====
-    // 创建临时参数对象用于构建提示词
+    // ===== 4. Build prompt =====
+    // Create temporary parameter object for building prompt
     const promptParams: AnalyzeContentParams = {
       ...params,
       content: contentToAnalyze,
@@ -335,24 +335,24 @@ export async function handleAnalyzeContent(
 
     const prompt = buildAnalysisPrompt(promptParams, detectedType, task, outputFormat, contentToAnalyze);
 
-    // 调用 Gemini API（使用默认模型 gemini-3-pro-preview）
+    // Call Gemini API (using default model gemini-3-pro-preview)
     const response = await client.generate(prompt, {
       systemInstruction: ANALYZE_CONTENT_SYSTEM_PROMPT,
       temperature: 0.5,
       maxTokens: 8192
     });
 
-    // 构建返回结果
+    // Build return result
     const result: AnalyzeContentResult = {
       analysis: response,
       contentType: detectedType,
       task: task
     };
 
-    // 如果是 JSON 格式，尝试解析并提取结构化数据
+    // If JSON format, try to parse and extract structured data
     if (outputFormat === 'json') {
       try {
-        // 提取 JSON 内容（可能被包裹在 markdown 代码块中）
+        // Extract JSON content (may be wrapped in markdown code block)
         let jsonContent = response;
         const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
         if (jsonMatch) {
@@ -364,7 +364,7 @@ export async function handleAnalyzeContent(
         if (parsed.suggestions) result.suggestions = parsed.suggestions;
         if (parsed.issues) result.issues = parsed.issues;
       } catch {
-        // JSON 解析失败，保持原始响应
+        // JSON parsing failed, keep original response
       }
     }
 

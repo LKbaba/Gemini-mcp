@@ -1,6 +1,6 @@
 /**
  * Tool 7: gemini_brainstorm
- * 创意头脑风暴工具 - 生成创意想法和解决方案
+ * Creative brainstorming tool - Generate creative ideas and solutions
  * Priority: P2 - Phase 4
  */
 
@@ -13,7 +13,7 @@ import {
 import { handleAPIError, logError } from '../utils/error-handler.js';
 import { readFile, readFiles, FileContent } from '../utils/file-reader.js';
 
-// 头脑风暴系统提示词
+// Brainstorming system prompt
 const BRAINSTORM_SYSTEM_PROMPT = `You are a creative innovation consultant with expertise in:
 - Product ideation and design thinking
 - Problem-solving and lateral thinking
@@ -44,22 +44,22 @@ Quality requirements:
 - Consider technical, business, and user perspectives
 - Provide specific, actionable suggestions`;
 
-// 参数接口
+// Parameter interface
 export interface BrainstormParams {
   topic: string;
   context?: string;
 
-  // 【新增】项目上下文文件路径
+  // [NEW] Project context file path
   contextFilePath?: string;
 
-  // 【新增】多个上下文文件
+  // [NEW] Multiple context files
   contextFiles?: string[];
 
   count?: number;
   style?: 'innovative' | 'practical' | 'radical';
 }
 
-// 想法接口
+// Idea interface
 export interface Idea {
   title: string;
   description: string;
@@ -68,12 +68,12 @@ export interface Idea {
   feasibility: 'low' | 'medium' | 'high';
 }
 
-// 返回接口
+// Return interface
 export interface BrainstormResult {
   topic: string;
   style: string;
   ideas: Idea[];
-  /** 用于头脑风暴的上下文文件列表 */
+  /** List of context files used for brainstorming */
   contextFilesUsed?: string[];
   metadata?: {
     totalIdeas: number;
@@ -82,11 +82,11 @@ export interface BrainstormResult {
 }
 
 /**
- * 构建头脑风暴提示词
- * @param params 原始参数
- * @param count 想法数量
- * @param style 风格
- * @param projectContext 项目上下文内容
+ * Build brainstorming prompt
+ * @param params Original parameters
+ * @param count Number of ideas
+ * @param style Style
+ * @param projectContext Project context content
  */
 function buildBrainstormPrompt(
   params: BrainstormParams,
@@ -98,7 +98,7 @@ function buildBrainstormPrompt(
 
   prompt += `## Topic\n${params.topic}\n\n`;
 
-  // 【新增】添加项目上下文
+  // [NEW] Add project context
   if (projectContext) {
     prompt += `## Project Background\n${projectContext}\n`;
     prompt += `**Important**: Please ensure your ideas are compatible with the project's architecture and tech stack.\n\n`;
@@ -161,22 +161,22 @@ Important:
 }
 
 /**
- * 解析头脑风暴响应
+ * Parse brainstorming response
  */
 function parseBrainstormResponse(response: string, expectedCount: number): Idea[] {
   try {
-    // 尝试提取 JSON 内容（可能被包裹在 markdown 代码块中）
+    // Try to extract JSON content (may be wrapped in markdown code blocks)
     let jsonContent = response;
     const jsonMatch = response.match(/```(?:json)?\s*([\s\S]*?)```/);
     if (jsonMatch) {
       jsonContent = jsonMatch[1].trim();
     }
 
-    // 尝试直接解析
+    // Try to parse directly
     const parsed = JSON.parse(jsonContent);
 
     if (parsed.ideas && Array.isArray(parsed.ideas)) {
-      // 验证并规范化每个想法
+      // Validate and normalize each idea
       return parsed.ideas.map((idea: any, index: number) => ({
         title: idea.title || `Idea ${index + 1}`,
         description: idea.description || 'No description provided',
@@ -188,7 +188,7 @@ function parseBrainstormResponse(response: string, expectedCount: number): Idea[
       }));
     }
 
-    // 如果响应是数组格式
+    // If response is in array format
     if (Array.isArray(parsed)) {
       return parsed.map((idea: any, index: number) => ({
         title: idea.title || `Idea ${index + 1}`,
@@ -201,10 +201,10 @@ function parseBrainstormResponse(response: string, expectedCount: number): Idea[
       }));
     }
   } catch {
-    // JSON 解析失败，尝试从文本中提取想法
+    // JSON parsing failed, try to extract ideas from text
   }
 
-  // 如果 JSON 解析失败，创建一个包含原始响应的想法
+  // If JSON parsing fails, create an idea containing the raw response
   return [{
     title: 'Brainstorm Results',
     description: response.substring(0, 500) + (response.length > 500 ? '...' : ''),
@@ -215,14 +215,14 @@ function parseBrainstormResponse(response: string, expectedCount: number): Idea[
 }
 
 /**
- * 处理 gemini_brainstorm 工具调用
+ * Handle gemini_brainstorm tool invocation
  */
 export async function handleBrainstorm(
   params: BrainstormParams,
   client: GeminiClient
 ): Promise<BrainstormResult> {
   try {
-    // 参数验证
+    // Parameter validation
     validateRequired(params.topic, 'topic');
     validateString(params.topic, 'topic', 5);
 
@@ -230,26 +230,26 @@ export async function handleBrainstorm(
       validateString(params.context, 'context', 5);
     }
 
-    // 验证可选枚举参数
+    // Validate optional enum parameters
     const validStyles = ['innovative', 'practical', 'radical'];
     if (params.style && !validStyles.includes(params.style)) {
       throw new Error(`Invalid style: ${params.style}. Must be one of: ${validStyles.join(', ')}`);
     }
 
-    // 验证 count 参数
+    // Validate count parameter
     if (params.count !== undefined) {
       validateNumber(params.count, 'count', 1, 20);
     }
 
-    // 设置默认值
+    // Set default values
     const count = params.count || 5;
     const style = params.style || 'innovative';
 
-    // 【新增】读取项目上下文文件
+    // [NEW] Read project context files
     let projectContext = '';
     const contextFilesUsed: string[] = [];
 
-    // 读取单个上下文文件
+    // Read single context file
     if (params.contextFilePath) {
       try {
         const fileContent = await readFile(params.contextFilePath);
@@ -258,11 +258,11 @@ export async function handleBrainstorm(
         projectContext += fileContent.content + '\n\n';
       } catch (error) {
         logError('brainstorm:readContextFilePath', error);
-        // 继续执行，不中断
+        // Continue execution without interrupting
       }
     }
 
-    // 读取多个上下文文件
+    // Read multiple context files
     if (params.contextFiles && params.contextFiles.length > 0) {
       try {
         const contextContents = await readFiles(params.contextFiles);
@@ -273,11 +273,11 @@ export async function handleBrainstorm(
         }
       } catch (error) {
         logError('brainstorm:readContextFiles', error);
-        // 继续执行，不中断
+        // Continue execution without interrupting
       }
     }
 
-    // 构建提示词（传入项目上下文）
+    // Build prompt (with project context)
     const prompt = buildBrainstormPrompt(
       params,
       count,
@@ -285,22 +285,22 @@ export async function handleBrainstorm(
       projectContext || undefined
     );
 
-    // 调用 Gemini API（使用默认模型 gemini-3-pro-preview）
+    // Call Gemini API (using default model gemini-3-pro-preview)
     const response = await client.generate(prompt, {
       systemInstruction: BRAINSTORM_SYSTEM_PROMPT,
       temperature: style === 'radical' ? 0.9 : (style === 'innovative' ? 0.8 : 0.6),
       maxTokens: 8192
     });
 
-    // 解析响应
+    // Parse response
     const ideas = parseBrainstormResponse(response, count);
 
-    // 构建返回结果
+    // Build return result
     return {
       topic: params.topic,
       style: style,
       ideas: ideas,
-      // 【新增】返回使用的上下文文件
+      // [NEW] Return used context files
       contextFilesUsed: contextFilesUsed.length > 0 ? contextFilesUsed : undefined,
       metadata: {
         totalIdeas: ideas.length,

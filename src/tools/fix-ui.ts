@@ -50,13 +50,13 @@ Code quality:
 export interface FixUIParams {
   screenshot: string;
 
-  // 【新增】源代码文件路径
+  // [NEW] Source code file path
   sourceCodePath?: string;
 
-  // 【新增】相关文件路径列表
+  // [NEW] Related files path list
   relatedFiles?: string[];
 
-  // 【保留】直接传入代码内容（向后兼容）
+  // [KEEP] Direct code input (backward compatible)
   currentCode?: string;
 
   issueDescription?: string;
@@ -69,11 +69,11 @@ export interface FixUIResult {
     description: string;
     code: string;
     changes: string[];
-    /** 修复针对的文件路径（如果适用） */
+    /** Target file path for this fix (if applicable) */
     filePath?: string;
   }>;
   preventionTips?: string[];
-  /** 分析中使用的源代码文件列表 */
+  /** List of source code files used in analysis */
   analyzedFiles?: string[];
 }
 
@@ -85,66 +85,66 @@ export async function handleFixUI(
   client: GeminiClient
 ): Promise<FixUIResult> {
   try {
-    // 验证必需参数
-    // screenshot 可以是文件路径或 Base64，gemini-client.ts 会自动处理转换
+    // Validate required parameters
+    // screenshot can be file path or Base64, gemini-client.ts will handle conversion automatically
     validateRequired(params.screenshot, 'screenshot');
     validateString(params.screenshot, 'screenshot', 5);
 
-    // 【新增】读取源代码文件
+    // [NEW] Read source code files
     let codeContext = '';
     const analyzedFiles: string[] = [];
 
-    // 读取主要源代码文件
+    // Read main source code file
     if (params.sourceCodePath) {
       try {
         const fileContent = await readFile(params.sourceCodePath);
         analyzedFiles.push(fileContent.path);
-        codeContext += `## 主要源代码文件: ${fileContent.path}\n`;
+        codeContext += `## Main source code file: ${fileContent.path}\n`;
         codeContext += `\`\`\`${fileContent.language?.toLowerCase() || ''}\n`;
         codeContext += fileContent.content;
         codeContext += '\n```\n\n';
       } catch (error) {
         logError('fixUI:readSourceCodePath', error);
-        // 继续执行，不中断
+        // Continue execution, do not interrupt
       }
     }
 
-    // 读取相关文件
+    // Read related files
     if (params.relatedFiles && params.relatedFiles.length > 0) {
       try {
         const relatedContents = await readFiles(params.relatedFiles);
         for (const file of relatedContents) {
           analyzedFiles.push(file.path);
-          codeContext += `## 相关文件: ${file.path}\n`;
+          codeContext += `## Related file: ${file.path}\n`;
           codeContext += `\`\`\`${file.language?.toLowerCase() || ''}\n`;
           codeContext += file.content;
           codeContext += '\n```\n\n';
         }
       } catch (error) {
         logError('fixUI:readRelatedFiles', error);
-        // 继续执行，不中断
+        // Continue execution, do not interrupt
       }
     }
 
-    // 向后兼容：如果提供了 currentCode 且没有读取到源文件
+    // Backward compatibility: if currentCode provided and no source file read
     if (params.currentCode && !params.sourceCodePath) {
-      codeContext += `## 当前代码\n\`\`\`\n${params.currentCode}\n\`\`\`\n\n`;
+      codeContext += `## Current code\n\`\`\`\n${params.currentCode}\n\`\`\`\n\n`;
     }
 
-    // 构建提示词
+    // Build prompt
     let prompt = `Analyze this screenshot and identify all UI problems.\n\n`;
 
     if (params.issueDescription) {
       prompt += `Known Issue: ${params.issueDescription}\n\n`;
     }
 
-    // 添加代码上下文
+    // Add code context
     if (codeContext) {
       prompt += `# Source Code Context\n${codeContext}\n`;
     }
 
     if (params.targetState) {
-      // 检查 targetState 是否是图片
+      // Check if targetState is an image
       const isBase64Image = params.targetState.startsWith('data:image');
       const isFilePath = /\.(png|jpg|jpeg|gif|webp|bmp|svg|ico)$/i.test(params.targetState);
       if (!isBase64Image && !isFilePath) {
@@ -152,7 +152,7 @@ export async function handleFixUI(
       }
     }
 
-    // 【更新】如果有源代码文件，要求在修复中标明文件路径
+    // [UPDATE] If there are source code files, require file path in fixes
     const hasSourceFiles = analyzedFiles.length > 0;
     prompt += `Please provide:
 1. Diagnosis: What's wrong and why (analyze both the screenshot and source code)
@@ -172,10 +172,10 @@ Format your response as JSON with this structure:
   "preventionTips": ["tip 1", "tip 2"]
 }`;
 
-    // 调用 Gemini API
+    // Call Gemini API
     const images = [params.screenshot];
-    // targetState 可以是图片（文件路径或 Base64）或文本描述
-    // 如果看起来像图片，则添加到图片列表
+    // targetState can be an image (file path or Base64) or text description
+    // If it looks like an image, add it to the image list
     if (params.targetState) {
       const isBase64Image = params.targetState.startsWith('data:image');
       const isFilePath = /\.(png|jpg|jpeg|gif|webp|bmp|svg|ico)$/i.test(params.targetState);
@@ -194,16 +194,16 @@ Format your response as JSON with this structure:
       }
     );
 
-    // 尝试解析为 JSON
+    // Try to parse as JSON
     try {
       const result = JSON.parse(response);
-      // 添加已分析的文件列表
+      // Add analyzed files list
       if (analyzedFiles.length > 0) {
         result.analyzedFiles = analyzedFiles;
       }
       return result;
     } catch {
-      // 如果不是 JSON，返回结构化响应
+      // If not JSON, return structured response
       return {
         diagnosis: response,
         fixes: [{
