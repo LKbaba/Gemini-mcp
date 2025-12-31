@@ -111,7 +111,7 @@ Config location:
   "mcpServers": {
     "gemini-assistant": {
       "command": "npx",
-      "args": ["-y", "github:LKbaba/Gemini-mcp"],
+      "args": ["-y", "github:LeonSGP43/Gemini-mcp"],
       "env": {
         "GEMINI_API_KEY": "your_api_key_here"
       }
@@ -126,7 +126,7 @@ Config location:
   "mcpServers": {
     "gemini-assistant": {
       "command": "npx",
-      "args": ["-y", "github:LKbaba/Gemini-mcp"],
+      "args": ["-y", "github:LeonSGP43/Gemini-mcp"],
       "env": {
         "GEMINI_API_KEY": "your_api_key_here",
         "HTTPS_PROXY": "http://127.0.0.1:7897"
@@ -145,7 +145,7 @@ Add to your MCP settings:
 {
   "gemini-assistant": {
     "command": "npx",
-    "args": ["-y", "github:LKbaba/Gemini-mcp"],
+    "args": ["-y", "github:LeonSGP43/Gemini-mcp"],
     "env": {
       "GEMINI_API_KEY": "your_api_key_here"
     }
@@ -217,7 +217,7 @@ When you provide a file path, Claude Code will automatically read and convert it
 
 ```bash
 # Clone repository
-git clone https://github.com/LKbaba/Gemini-mcp.git
+git clone https://github.com/LeonSGP43/Gemini-mcp.git
 cd Gemini-mcp
 
 # Install dependencies

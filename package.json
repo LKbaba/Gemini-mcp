@@ -47,16 +47,16 @@
     "windsurf",
     "typescript"
   ],
-  "author": "LKbaba (based on aliargun/mcp-server-gemini)",
+  "author": "LeonSGP43",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LKbaba/Gemini-mcp.git"
+    "url": "git+https://github.com/LeonSGP43/Gemini-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/LKbaba/Gemini-mcp/issues"
+    "url": "https://github.com/LeonSGP43/Gemini-mcp/issues"
   },
-  "homepage": "https://github.com/LKbaba/Gemini-mcp#readme",
+  "homepage": "https://github.com/LeonSGP43/Gemini-mcp#readme",
   "engines": {
     "node": ">=16.0.0"
   },
