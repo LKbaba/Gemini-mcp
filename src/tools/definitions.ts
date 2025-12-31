@@ -373,7 +373,7 @@ export const TOOL_DEFINITIONS = [
         },
         thinkingLevel: {
           type: 'string',
-          enum: ['NONE', 'LOW', 'MEDIUM', 'HIGH'],
+          enum: ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH'],
           description: 'Thinking depth for complex queries (default: HIGH)',
           default: 'HIGH'
         }

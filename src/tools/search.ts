@@ -23,7 +23,7 @@ When answering questions:
 export interface SearchParams {
   query: string;
   context?: string;
-  thinkingLevel?: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
+  thinkingLevel?: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
 }
 
 // Return interface
@@ -71,12 +71,10 @@ export async function handleSearch(
       tools,
     };
 
-    // Add thinking config if not NONE
-    if (thinkingLevel !== 'NONE') {
-      config.thinkingConfig = {
-        thinkingLevel,
-      };
-    }
+    // Add thinking config
+    config.thinkingConfig = {
+      thinkingLevel,
+    };
 
     // Build prompt
     let prompt = params.query;
