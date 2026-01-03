@@ -25,17 +25,19 @@ export async function handleSearch(params, apiKey) {
             validateString(params.context, 'context', 2);
         }
         const thinkingLevel = params.thinkingLevel || 'high';
+        const outputFormat = params.outputFormat || 'text';
         // Create AI client
         const ai = new GoogleGenAI({ apiKey });
         // Configure tools with Google Search
         const tools = [{ googleSearch: {} }];
         const config = {
             tools,
+            thinkingConfig: { thinkingLevel },
         };
-        // Add thinking config
-        config.thinkingConfig = {
-            thinkingLevel,
-        };
+        // Add JSON output configuration if requested
+        if (outputFormat === 'json') {
+            config.responseMimeType = 'application/json';
+        }
         // Build prompt
         let prompt = params.query;
         if (params.context) {
@@ -80,6 +82,7 @@ export async function handleSearch(params, apiKey) {
             metadata: {
                 modelUsed: model,
                 thinkingLevel,
+                outputFormat,
             },
         };
     }

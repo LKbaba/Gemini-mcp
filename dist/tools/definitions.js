@@ -350,7 +350,18 @@ export const TOOL_DEFINITIONS = [
     // 🔍 Tool 8: gemini_search
     {
         name: TOOL_NAMES.SEARCH,
-        description: 'Search the web using Gemini\'s built-in Google Search grounding. Returns up-to-date information with source citations. Ideal for current events, latest documentation, real-time data, and fact-checking.',
+        description: `Search the web using Gemini's built-in Google Search grounding.
+
+Features:
+- Returns up-to-date information with source citations
+- Supports thinkingLevel for reasoning depth control
+- Ideal for: current events, latest documentation, real-time data, fact-checking
+
+Usage Tips:
+- Use thinkingLevel: 'low' for simple queries (faster response)
+- Use thinkingLevel: 'high' for complex analysis (default, deeper reasoning)
+- Use outputFormat: 'json' when you need structured data
+- Search results include source URLs in groundingMetadata`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -367,6 +378,12 @@ export const TOOL_DEFINITIONS = [
                     enum: ['low', 'high'],
                     description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
                     default: 'high'
+                },
+                outputFormat: {
+                    type: 'string',
+                    enum: ['text', 'json'],
+                    description: 'Output format: text for readable response, json for structured data (default: text)',
+                    default: 'text'
                 }
             },
             required: ['query']

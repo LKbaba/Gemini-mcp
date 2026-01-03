@@ -6,7 +6,7 @@ export const MCP_VERSION = '2024-11-05';
 // Server information
 export const SERVER_INFO = {
     name: 'mcp-server-gemini',
-    version: '1.0.1',
+    version: '1.1.0',
     description: 'Specialized MCP server for Gemini 3.0 Pro focused on UI generation and frontend development',
     author: 'LKbaba',
     basedOn: 'aliargun/mcp-server-gemini v4.2.2'

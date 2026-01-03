@@ -24,6 +24,7 @@ export interface SearchParams {
   query: string;
   context?: string;
   thinkingLevel?: 'low' | 'high';
+  outputFormat?: 'text' | 'json';
 }
 
 // Return interface
@@ -40,6 +41,7 @@ export interface SearchResult {
   metadata: {
     modelUsed: string;
     thinkingLevel: string;
+    outputFormat: string;
   };
 }
 
@@ -60,6 +62,7 @@ export async function handleSearch(
     }
 
     const thinkingLevel = params.thinkingLevel || 'high';
+    const outputFormat = params.outputFormat || 'text';
 
     // Create AI client
     const ai = new GoogleGenAI({ apiKey });
@@ -69,12 +72,13 @@ export async function handleSearch(
 
     const config: any = {
       tools,
+      thinkingConfig: { thinkingLevel },
     };
 
-    // Add thinking config
-    config.thinkingConfig = {
-      thinkingLevel,
-    };
+    // Add JSON output configuration if requested
+    if (outputFormat === 'json') {
+      config.responseMimeType = 'application/json';
+    }
 
     // Build prompt
     let prompt = params.query;
@@ -127,6 +131,7 @@ export async function handleSearch(
       metadata: {
         modelUsed: model,
         thinkingLevel,
+        outputFormat,
       },
     };
 
