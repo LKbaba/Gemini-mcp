@@ -11,6 +11,7 @@ export { handleCreateAnimation } from './create-animation.js';
 export { handleAnalyzeContent } from './analyze-content.js';
 export { handleAnalyzeCodebase } from './analyze-codebase.js';
 export { handleBrainstorm } from './brainstorm.js';
+export { handleSearch } from './search.js';
 export { handleListModels } from './list-models.js';
 
 // 导出工具定义

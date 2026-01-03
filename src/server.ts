@@ -22,6 +22,7 @@ import {
   handleAnalyzeContent,
   handleAnalyzeCodebase,
   handleBrainstorm,
+  handleSearch,
   handleListModels
 } from './tools/index.js';
 
@@ -170,6 +171,10 @@ async function handleToolsCall(request: MCPRequest): Promise<void> {
 
       case TOOL_NAMES.BRAINSTORM:
         result = await handleBrainstorm(args, geminiClient);
+        break;
+
+      case TOOL_NAMES.SEARCH:
+        result = await handleSearch(args, process.env.GEMINI_API_KEY!);
         break;
 
       default:

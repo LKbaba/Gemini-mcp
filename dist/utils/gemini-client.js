@@ -26,7 +26,7 @@ function getMimeType(ext) {
  * Convert image to Base64 inline data format
  * Supports: file path, Base64 data URI
  */
-function convertImageToInlineData(image) {
+export function convertImageToInlineData(image) {
     // 1. Already in Base64 data URI format
     if (image.startsWith('data:')) {
         const [metadata, data] = image.split(',');

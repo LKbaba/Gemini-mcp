@@ -12,7 +12,7 @@ import { SERVER_INFO, MCP_VERSION, ERROR_CODES, TOOL_NAMES } from './config/cons
 import { createGeminiClient } from './utils/gemini-client.js';
 import { handleAPIError, handleValidationError, handleInternalError, logError } from './utils/error-handler.js';
 import { TOOL_DEFINITIONS } from './tools/definitions.js';
-import { handleGenerateUI, handleMultimodalQuery, handleFixUI, handleCreateAnimation, handleAnalyzeContent, handleAnalyzeCodebase, handleBrainstorm, handleListModels } from './tools/index.js';
+import { handleGenerateUI, handleMultimodalQuery, handleFixUI, handleCreateAnimation, handleAnalyzeContent, handleAnalyzeCodebase, handleBrainstorm, handleSearch, handleListModels } from './tools/index.js';
 // Setup proxy for Node.js fetch (required for users behind proxy/VPN)
 async function setupProxy() {
     const proxyUrl = process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.http_proxy || process.env.https_proxy;
@@ -133,6 +133,9 @@ async function handleToolsCall(request) {
                 break;
             case TOOL_NAMES.BRAINSTORM:
                 result = await handleBrainstorm(args, geminiClient);
+                break;
+            case TOOL_NAMES.SEARCH:
+                result = await handleSearch(args, process.env.GEMINI_API_KEY);
                 break;
             default:
                 sendError(request.id, ERROR_CODES.METHOD_NOT_FOUND, `Unknown tool: ${name}`);

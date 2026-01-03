@@ -146,6 +146,12 @@ export const TOOL_DEFINITIONS = [
         targetState: {
           type: 'string',
           description: 'Optional: Expected state description or reference image'
+        },
+        thinkingLevel: {
+          type: 'string',
+          enum: ['low', 'high'],
+          description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
+          default: 'high'
         }
       },
       required: ['screenshot']
@@ -292,6 +298,12 @@ export const TOOL_DEFINITIONS = [
           description: 'Enable Deep Think mode for complex analysis (default: false)',
           default: false
         },
+        thinkingLevel: {
+          type: 'string',
+          enum: ['low', 'high'],
+          description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
+          default: 'high'
+        },
         outputFormat: {
           type: 'string',
           enum: ['markdown', 'json'],
@@ -344,7 +356,50 @@ export const TOOL_DEFINITIONS = [
     }
   },
 
-  // 📋 Tool 8: list_models
+  // 🔍 Tool 8: gemini_search
+  {
+    name: TOOL_NAMES.SEARCH,
+    description: `Search the web using Gemini's built-in Google Search grounding.
+
+Features:
+- Returns up-to-date information with source citations
+- Supports thinkingLevel for reasoning depth control
+- Ideal for: current events, latest documentation, real-time data, fact-checking
+
+Usage Tips:
+- Use thinkingLevel: 'low' for simple queries (faster response)
+- Use thinkingLevel: 'high' for complex analysis (default, deeper reasoning)
+- Use outputFormat: 'json' when you need structured data
+- Search results include source URLs in groundingMetadata`,
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Search query or question to answer using web search'
+        },
+        context: {
+          type: 'string',
+          description: 'Optional: Additional context to help refine the search'
+        },
+        thinkingLevel: {
+          type: 'string',
+          enum: ['low', 'high'],
+          description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
+          default: 'high'
+        },
+        outputFormat: {
+          type: 'string',
+          enum: ['text', 'json'],
+          description: 'Output format: text for readable response, json for structured data (default: text)',
+          default: 'text'
+        }
+      },
+      required: ['query']
+    }
+  },
+
+  // 📋 Tool 9: list_models
   {
     name: TOOL_NAMES.LIST_MODELS,
     description: 'List all available Gemini models with their capabilities, context windows, and use cases.',

@@ -4,6 +4,7 @@
  * Priority: P0 - Core functionality
  */
 
+import { GoogleGenAI } from '@google/genai';
 import { GeminiClient } from '../utils/gemini-client.js';
 import {
   validateRequired,
@@ -61,6 +62,12 @@ export interface FixUIParams {
 
   issueDescription?: string;
   targetState?: string;
+  
+  /**
+   * Thinking level for complex debugging (default: high)
+   * high is recommended for complex UI issues
+   */
+  thinkingLevel?: 'low' | 'high';
 }
 
 export interface FixUIResult {
@@ -184,24 +191,52 @@ Format your response as JSON with this structure:
       }
     }
 
-    const response = await client.generateMultimodal(
-      prompt,
-      images,
-      {
-        systemInstruction: UI_FIX_SYSTEM_PROMPT,
-        temperature: 0.5,
-        maxTokens: 6144
-      }
-    );
+    // Determine thinking level (default high for complex debugging)
+    const thinkingLevel = params.thinkingLevel || 'high';
+
+    let response: string;
+
+    // Always use thinking mode with direct GoogleGenAI call
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY environment variable is not set');
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
+
+    // Convert images to inline data format
+    const imageParts = await Promise.all(images.map(async (img) => {
+      const { convertImageToInlineData } = await import('../utils/gemini-client.js');
+      const { mimeType, data } = convertImageToInlineData(img);
+      return { inlineData: { mimeType, data } };
+    }));
+
+    const config: any = {
+      thinkingConfig: { thinkingLevel },
+      systemInstruction: UI_FIX_SYSTEM_PROMPT,
+    };
+
+    const contents = [{
+      role: 'user',
+      parts: [{ text: prompt }, ...imageParts]
+    }];
+
+    const apiResult = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      config,
+      contents,
+    });
+
+    response = apiResult.text || '';
 
     // Try to parse as JSON
     try {
-      const result = JSON.parse(response);
+      const parsedResult = JSON.parse(response);
       // Add analyzed files list
       if (analyzedFiles.length > 0) {
-        result.analyzedFiles = analyzedFiles;
+        parsedResult.analyzedFiles = analyzedFiles;
       }
-      return result;
+      return parsedResult;
     } catch {
       // If not JSON, return structured response
       return {
