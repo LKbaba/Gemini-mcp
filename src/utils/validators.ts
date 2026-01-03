@@ -4,7 +4,7 @@
 
 import {
   FRAMEWORKS,
-  ANIMATION_TECHNOLOGIES,
+  // ANIMATION_TECHNOLOGIES removed - animation tool has been removed
   UI_STYLES,
   OUTPUT_FORMATS,
   CONTENT_TYPES,
@@ -113,12 +113,7 @@ export function validateFramework(value: string): void {
   validateEnum(value, 'framework', FRAMEWORKS);
 }
 
-/**
- * Validate animation technology
- */
-export function validateAnimationTechnology(value: string): void {
-  validateEnum(value, 'technology', ANIMATION_TECHNOLOGIES);
-}
+// validateAnimationTechnology removed - animation tool has been removed
 
 /**
  * Validate UI style

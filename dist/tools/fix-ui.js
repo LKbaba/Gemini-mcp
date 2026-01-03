@@ -1,45 +1,65 @@
 /**
  * Tool 3: gemini_fix_ui_from_screenshot
- * Identify and fix UI issues from screenshots
+ * Visual Debug Loop - Identify and fix UI issues from screenshots
+ *
+ * Core features:
+ * - Requires three inputs: screenshot + source code + issue description
+ * - Outputs git diff format patches for direct application
+ *
  * Priority: P0 - Core functionality
  */
 import { GoogleGenAI } from '@google/genai';
 import { validateRequired, validateString } from '../utils/validators.js';
 import { handleAPIError, logError } from '../utils/error-handler.js';
 import { readFile, readFiles } from '../utils/file-reader.js';
-// System prompt for UI debugging
-const UI_FIX_SYSTEM_PROMPT = `You are a UI debugging expert specializing in visual problem diagnosis.
+// System prompt for Visual Debug Loop
+const UI_FIX_SYSTEM_PROMPT = `You are a professional UI visual debugging expert, specializing in diagnosing and fixing frontend issues from screenshots.
 
-Your expertise:
+## Your expertise:
 - Identifying layout issues (alignment, spacing, overflow)
 - Detecting styling problems (colors, fonts, borders)
 - Spotting responsive design failures
 - Finding accessibility issues
 - Recognizing browser compatibility problems
 
-Analysis process:
-1. Examine the screenshot carefully
-2. Identify all visual problems
-3. Determine root causes (CSS, HTML structure, JavaScript)
-4. Provide targeted fixes
+## Workflow (Visual Debug Loop):
+1. Carefully analyze visual problems in the screenshot
+2. Cross-reference with source code to locate root cause
+3. Understand the user's expected behavior
+4. Generate precise code fixes (git diff format)
 
-Output requirements:
-1. Diagnosis:
-   - List all identified issues
-   - Explain why each issue occurs
-   - Prioritize by severity
-2. Fixes:
-   - Provide complete code fixes
-   - Show before/after comparisons
-   - Explain what each fix does
-3. Prevention:
-   - Suggest best practices to avoid similar issues
-   - Recommend tools or techniques
+## Output requirements:
 
-Code quality:
+### 1. Diagnosis
+- List all identified issues
+- Explain the root cause of each issue
+- Prioritize by severity
+
+### 2. Patches
+**Must use unified diff format**, example:
+\`\`\`diff
+--- a/src/components/Button.tsx
++++ b/src/components/Button.tsx
+@@ -15,7 +15,7 @@ export const Button = ({ children }) => {
+   return (
+     <button
+-      className="px-4 py-2 bg-blue-500"
++      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 transition-colors"
+       onClick={handleClick}
+     >
+\`\`\`
+
+### 3. Changes
+- Explain the purpose of each modification
+- Describe why the fix is effective
+
+### 4. Prevention Tips
+- How to avoid similar issues
+- Recommended tools or best practices
+
+## Code quality principles:
 - Minimal changes (fix only what's broken)
 - Maintain existing code style
-- Add comments explaining fixes
 - Ensure backward compatibility`;
 /**
  * Handle gemini_fix_ui_from_screenshot tool call
@@ -106,25 +126,30 @@ export async function handleFixUI(params, client) {
                 prompt += `Expected State: ${params.targetState}\n\n`;
             }
         }
-        // [UPDATE] If there are source code files, require file path in fixes
+        // Build Visual Debug Loop output requirements
         const hasSourceFiles = analyzedFiles.length > 0;
-        prompt += `Please provide:
-1. Diagnosis: What's wrong and why (analyze both the screenshot and source code)
-2. Fixes: Complete code fixes for each issue${hasSourceFiles ? ' (include file path for each fix)' : ''}
-3. Prevention: How to avoid similar issues
+        if (!hasSourceFiles && !params.currentCode) {
+            prompt += `\n⚠️ Warning: No source code provided. Please provide sourceCodePath or relatedFiles for more accurate git diff patches.\n\n`;
+        }
+        prompt += `Please output the fix in the following JSON format:
 
-Format your response as JSON with this structure:
 {
-  "diagnosis": "detailed analysis",
-  "fixes": [
+  "diagnosis": "Detailed problem diagnosis report including cause and severity",
+  "patches": [
     {
-      "description": "what this fix does",
-      "code": "complete fixed code",
-      "changes": ["list of changes made"]${hasSourceFiles ? ',\n      "filePath": "path/to/file.tsx"' : ''}
+      "filePath": "src/components/Example.tsx",
+      "diff": "--- a/src/components/Example.tsx\\n+++ b/src/components/Example.tsx\\n@@ -10,3 +10,3 @@\\n-  old code\\n+  new code",
+      "changes": ["Change description 1", "Change description 2"]
     }
   ],
-  "preventionTips": ["tip 1", "tip 2"]
-}`;
+  "preventionTips": ["Prevention tip 1", "Prevention tip 2"]
+}
+
+Important requirements:
+1. The diff in patches must be valid unified diff format
+2. Each patch must include the complete file path
+3. The diff content should include sufficient context (at least 3 lines)
+4. Ensure the diff can be directly applied with 'git apply'`;
         // Call Gemini API
         const images = [params.screenshot];
         // targetState can be an image (file path or Base64) or text description
@@ -165,23 +190,33 @@ Format your response as JSON with this structure:
             contents,
         });
         response = apiResult.text || '';
-        // Try to parse as JSON
+        // Try to parse JSON response
         try {
             const parsedResult = JSON.parse(response);
             // Add analyzed files list
             if (analyzedFiles.length > 0) {
                 parsedResult.analyzedFiles = analyzedFiles;
             }
+            // Ensure patches field exists (compatibility handling)
+            if (!parsedResult.patches && parsedResult.fixes) {
+                // Convert legacy fixes format to new patches format
+                parsedResult.patches = parsedResult.fixes.map((fix) => ({
+                    filePath: fix.filePath || 'unknown',
+                    diff: fix.code || '',
+                    changes: fix.changes || [fix.description]
+                }));
+            }
             return parsedResult;
         }
         catch {
-            // If not JSON, return structured response
+            // If not JSON, try to extract code blocks as diff
+            const diffBlocks = extractDiffFromResponse(response);
             return {
                 diagnosis: response,
-                fixes: [{
-                        description: 'General fix',
-                        code: extractCodeFromResponse(response),
-                        changes: ['See diagnosis for details']
+                patches: diffBlocks.length > 0 ? diffBlocks : [{
+                        filePath: 'unknown',
+                        diff: extractCodeFromResponse(response),
+                        changes: ['See diagnosis report for details']
                     }],
                 analyzedFiles: analyzedFiles.length > 0 ? analyzedFiles : undefined
             };
@@ -193,7 +228,28 @@ Format your response as JSON with this structure:
     }
 }
 /**
- * Extract code from response (if JSON parsing fails)
+ * Extract diff code blocks from response
+ */
+function extractDiffFromResponse(response) {
+    const patches = [];
+    // Match diff code blocks
+    const diffPattern = /```diff\n([\s\S]*?)```/g;
+    let match;
+    while ((match = diffPattern.exec(response)) !== null) {
+        const diffContent = match[1].trim();
+        // Try to extract file path from diff header
+        const filePathMatch = diffContent.match(/^---\s+a\/(.+)$/m);
+        const filePath = filePathMatch ? filePathMatch[1] : 'unknown';
+        patches.push({
+            filePath,
+            diff: diffContent,
+            changes: ['Diff patch extracted from response']
+        });
+    }
+    return patches;
+}
+/**
+ * Extract code blocks from response (fallback when JSON parsing fails)
  */
 function extractCodeFromResponse(response) {
     // Try to extract code blocks

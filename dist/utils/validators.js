@@ -1,7 +1,9 @@
 /**
  * Parameter validation utilities
  */
-import { FRAMEWORKS, ANIMATION_TECHNOLOGIES, UI_STYLES, OUTPUT_FORMATS, CONTENT_TYPES, ANALYSIS_TASKS, CODEBASE_FOCUS, BRAINSTORM_STYLES } from '../config/constants.js';
+import { FRAMEWORKS, 
+// ANIMATION_TECHNOLOGIES removed - animation tool has been removed
+UI_STYLES, OUTPUT_FORMATS, CONTENT_TYPES, ANALYSIS_TASKS, CODEBASE_FOCUS, BRAINSTORM_STYLES } from '../config/constants.js';
 import { isModelSupported } from '../config/models.js';
 /**
  * Validate required parameter
@@ -88,12 +90,7 @@ export function validateURL(value, fieldName) {
 export function validateFramework(value) {
     validateEnum(value, 'framework', FRAMEWORKS);
 }
-/**
- * Validate animation technology
- */
-export function validateAnimationTechnology(value) {
-    validateEnum(value, 'technology', ANIMATION_TECHNOLOGIES);
-}
+// validateAnimationTechnology removed - animation tool has been removed
 /**
  * Validate UI style
  */

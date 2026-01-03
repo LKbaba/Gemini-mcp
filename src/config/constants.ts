@@ -27,7 +27,7 @@ export const TOOL_NAMES = {
   GENERATE_UI: 'gemini_generate_ui',
   MULTIMODAL_QUERY: 'gemini_multimodal_query',
   FIX_UI: 'gemini_fix_ui_from_screenshot',
-  CREATE_ANIMATION: 'gemini_create_animation',
+  // CREATE_ANIMATION removed - animation can be generated via generate_ui
   ANALYZE_CONTENT: 'gemini_analyze_content',
   ANALYZE_CODEBASE: 'gemini_analyze_codebase',
   BRAINSTORM: 'gemini_brainstorm',
@@ -59,8 +59,7 @@ export const DEFAULT_PARAMS = {
 // Supported frameworks
 export const FRAMEWORKS = ['vanilla', 'react', 'vue', 'svelte'] as const;
 
-// Supported technologies (animation)
-export const ANIMATION_TECHNOLOGIES = ['css', 'canvas', 'webgl', 'threejs'] as const;
+// ANIMATION_TECHNOLOGIES removed - animation tool has been removed
 
 // Supported styles
 export const UI_STYLES = ['modern', 'minimal', 'glassmorphism', 'neumorphism'] as const;

@@ -18,7 +18,7 @@ import {
   handleGenerateUI,
   handleMultimodalQuery,
   handleFixUI,
-  handleCreateAnimation,
+  // handleCreateAnimation removed - animation can be generated via generate_ui
   handleAnalyzeContent,
   handleAnalyzeCodebase,
   handleBrainstorm,
@@ -157,9 +157,7 @@ async function handleToolsCall(request: MCPRequest): Promise<void> {
         result = await handleFixUI(args, geminiClient);
         break;
 
-      case TOOL_NAMES.CREATE_ANIMATION:
-        result = await handleCreateAnimation(args, geminiClient);
-        break;
+      // CREATE_ANIMATION case removed - animation can be generated via generate_ui
 
       case TOOL_NAMES.ANALYZE_CONTENT:
         result = await handleAnalyzeContent(args, geminiClient);

@@ -1,18 +1,18 @@
 /**
- * 工具导出
- * 所有 MCP 工具的统一入口
+ * Tool exports
+ * Unified entry point for all MCP tools
  */
 
-// 导出工具处理器
+// Export tool handlers
 export { handleGenerateUI } from './generate-ui.js';
 export { handleMultimodalQuery } from './multimodal-query.js';
 export { handleFixUI } from './fix-ui.js';
-export { handleCreateAnimation } from './create-animation.js';
+// handleCreateAnimation removed - animation can be generated via generate_ui
 export { handleAnalyzeContent } from './analyze-content.js';
 export { handleAnalyzeCodebase } from './analyze-codebase.js';
 export { handleBrainstorm } from './brainstorm.js';
 export { handleSearch } from './search.js';
 export { handleListModels } from './list-models.js';
 
-// 导出工具定义
+// Export tool definitions
 export { TOOL_DEFINITIONS } from './definitions.js';

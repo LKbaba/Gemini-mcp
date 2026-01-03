@@ -12,7 +12,9 @@ import { SERVER_INFO, MCP_VERSION, ERROR_CODES, TOOL_NAMES } from './config/cons
 import { createGeminiClient } from './utils/gemini-client.js';
 import { handleAPIError, handleValidationError, handleInternalError, logError } from './utils/error-handler.js';
 import { TOOL_DEFINITIONS } from './tools/definitions.js';
-import { handleGenerateUI, handleMultimodalQuery, handleFixUI, handleCreateAnimation, handleAnalyzeContent, handleAnalyzeCodebase, handleBrainstorm, handleSearch, handleListModels } from './tools/index.js';
+import { handleGenerateUI, handleMultimodalQuery, handleFixUI, 
+// handleCreateAnimation removed - animation can be generated via generate_ui
+handleAnalyzeContent, handleAnalyzeCodebase, handleBrainstorm, handleSearch, handleListModels } from './tools/index.js';
 // Setup proxy for Node.js fetch (required for users behind proxy/VPN)
 async function setupProxy() {
     const proxyUrl = process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.http_proxy || process.env.https_proxy;
@@ -122,9 +124,7 @@ async function handleToolsCall(request) {
             case TOOL_NAMES.FIX_UI:
                 result = await handleFixUI(args, geminiClient);
                 break;
-            case TOOL_NAMES.CREATE_ANIMATION:
-                result = await handleCreateAnimation(args, geminiClient);
-                break;
+            // CREATE_ANIMATION case removed - animation can be generated via generate_ui
             case TOOL_NAMES.ANALYZE_CONTENT:
                 result = await handleAnalyzeContent(args, geminiClient);
                 break;

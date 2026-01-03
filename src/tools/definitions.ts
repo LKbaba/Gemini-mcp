@@ -112,10 +112,22 @@ export const TOOL_DEFINITIONS = [
     }
   },
 
-  // 🐛 Tool 3: gemini_fix_ui_from_screenshot
+  // 🐛 Tool 3: gemini_fix_ui_from_screenshot (Visual Debug Loop)
   {
     name: TOOL_NAMES.FIX_UI,
-    description: 'Identify and fix UI issues from screenshots. Diagnoses layout problems, styling issues, responsive failures, and provides targeted code fixes. Supports reading source code files for precise diagnosis.',
+    description: `Visual Debug Loop - Identify and fix UI issues from screenshots.
+
+Core workflow:
+1. Analyze screenshot to identify visual problems
+2. Cross-reference with source code to locate root cause
+3. Generate git diff patches for precise fixes
+
+Best practice: Provide all three inputs for optimal results:
+- screenshot: The UI problem screenshot
+- sourceCodePath: Main source file path
+- issueDescription: What's wrong and expected behavior
+
+Output: Returns git diff format patches that can be directly applied with 'git apply'.`,
     inputSchema: {
       type: 'object',
       properties: {
@@ -123,29 +135,26 @@ export const TOOL_DEFINITIONS = [
           type: 'string',
           description: 'Screenshot of the UI problem as file path (e.g., ./screenshots/bug.png) or Base64 data URI. File paths will be automatically converted to Base64.'
         },
-        // [NEW] Source code file path
         sourceCodePath: {
           type: 'string',
-          description: 'Path to the main source code file causing the issue (e.g., "./src/components/LoginForm.tsx"). The tool will read and analyze this file.'
+          description: '[Recommended] Path to the main source code file causing the issue (e.g., "./src/components/LoginForm.tsx"). Required for generating accurate git diff patches.'
         },
-        // [NEW] List of related file paths
         relatedFiles: {
           type: 'array',
           items: { type: 'string' },
           description: 'Paths to related files like CSS, parent components, or utilities (e.g., ["./src/styles/login.css", "./src/components/Button.tsx"])'
         },
-        // [KEPT] Direct code content input (backward compatibility)
-        currentCode: {
-          type: 'string',
-          description: 'Optional: Current code causing the issue (for backward compatibility, prefer using sourceCodePath)'
-        },
         issueDescription: {
           type: 'string',
-          description: 'Optional: Description of the problem'
+          description: '[Recommended] Description of the problem and expected behavior. The more specific, the better the fix.'
         },
         targetState: {
           type: 'string',
-          description: 'Optional: Expected state description or reference image'
+          description: 'Optional: Expected state as text description or reference image path'
+        },
+        currentCode: {
+          type: 'string',
+          description: '[Deprecated] Direct code input. Prefer using sourceCodePath for better context.'
         },
         thinkingLevel: {
           type: 'string',
@@ -158,47 +167,10 @@ export const TOOL_DEFINITIONS = [
     }
   },
 
-  // ✨ Tool 4: gemini_create_animation
-  {
-    name: TOOL_NAMES.CREATE_ANIMATION,
-    description: 'Create interactive animations using CSS, Canvas, WebGL, or Three.js. Generates production-ready animation code with smooth 60fps performance.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        description: {
-          type: 'string',
-          description: 'Description of the desired animation'
-        },
-        technology: {
-          type: 'string',
-          enum: ['css', 'canvas', 'webgl', 'threejs'],
-          description: 'Animation technology (default: canvas)',
-          default: 'canvas'
-        },
-        interactive: {
-          type: 'boolean',
-          description: 'Make it interactive (mouse/touch) (default: true)',
-          default: true
-        },
-        fps: {
-          type: 'number',
-          description: 'Target frames per second (default: 60)',
-          default: 60
-        },
-        dimensions: {
-          type: 'object',
-          properties: {
-            width: { type: 'number' },
-            height: { type: 'number' }
-          },
-          description: 'Optional: Canvas dimensions'
-        }
-      },
-      required: ['description']
-    }
-  },
+  // ✨ Tool 4: gemini_create_animation removed
+  // Animation generation can be done via gemini_generate_ui tool by describing animation needs in the description
 
-  // 📄 Tool 5: gemini_analyze_content
+  // 📄 Tool 4: gemini_analyze_content
   {
     name: TOOL_NAMES.ANALYZE_CONTENT,
     description: 'Analyze code, documents, or data. Supports file path or direct content input. Provides summarization, code review, explanation, optimization, and debugging. Auto-detects content type and programming language.',
