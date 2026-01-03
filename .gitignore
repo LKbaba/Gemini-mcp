@@ -21,3 +21,6 @@ Thumbs.db
 # Claude configuration
 .claude/
 MCP-PRD.md
+/CCimages
+updatePRD.md
+specs/gemini-search-thinking-mode-PLAN.md

@@ -149,9 +149,9 @@ export const TOOL_DEFINITIONS = [
         },
         thinkingLevel: {
           type: 'string',
-          enum: ['NONE', 'LOW', 'MEDIUM', 'HIGH'],
-          description: 'Thinking depth for complex debugging (default: HIGH). HIGH recommended for complex UI issues.',
-          default: 'HIGH'
+          enum: ['low', 'high'],
+          description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
+          default: 'high'
         }
       },
       required: ['screenshot']
@@ -300,9 +300,9 @@ export const TOOL_DEFINITIONS = [
         },
         thinkingLevel: {
           type: 'string',
-          enum: ['NONE', 'LOW', 'MEDIUM', 'HIGH'],
-          description: 'Thinking depth for complex analysis (default: HIGH). HIGH recommended for architecture and security analysis.',
-          default: 'HIGH'
+          enum: ['low', 'high'],
+          description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
+          default: 'high'
         },
         outputFormat: {
           type: 'string',
@@ -373,9 +373,9 @@ export const TOOL_DEFINITIONS = [
         },
         thinkingLevel: {
           type: 'string',
-          enum: ['MINIMAL', 'LOW', 'MEDIUM', 'HIGH'],
-          description: 'Thinking depth for complex queries (default: HIGH)',
-          default: 'HIGH'
+          enum: ['low', 'high'],
+          description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
+          default: 'high'
         }
       },
       required: ['query']

@@ -100,10 +100,10 @@ export interface AnalyzeCodebaseParams {
   outputFormat?: 'markdown' | 'json';
   
   /**
-   * Thinking level for complex analysis (default: HIGH)
-   * HIGH is recommended for architecture and security analysis
+   * Thinking level for complex analysis (default: high)
+   * high is recommended for architecture and security analysis
    */
-  thinkingLevel?: 'NONE' | 'LOW' | 'MEDIUM' | 'HIGH';
+  thinkingLevel?: 'low' | 'high';
 }
 
 // Return interface
@@ -425,46 +425,36 @@ export async function handleAnalyzeCodebase(
 
     const prompt = buildCodebasePrompt(promptParams, metrics, outputFormat);
 
-    // Determine thinking level (default HIGH for complex analysis)
-    const thinkingLevel = params.thinkingLevel || 'HIGH';
-    
+    // Determine thinking level (default high for complex analysis)
+    const thinkingLevel = params.thinkingLevel || 'high';
+
     let response: string;
-    
-    if (thinkingLevel !== 'NONE') {
-      // Use thinking mode with direct GoogleGenAI call
-      const apiKey = process.env.GEMINI_API_KEY;
-      if (!apiKey) {
-        throw new Error('GEMINI_API_KEY environment variable is not set');
-      }
-      
-      const ai = new GoogleGenAI({ apiKey });
-      
-      const config: any = {
-        thinkingConfig: { thinkingLevel },
-        systemInstruction: CODEBASE_ANALYSIS_SYSTEM_PROMPT,
-      };
-      
-      const contents = [{
-        role: 'user',
-        parts: [{ text: prompt }]
-      }];
-      
-      const result = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        config,
-        contents,
-      });
-      
-      response = result.text || '';
-    } else {
-      // Use standard client without thinking
-      // Deep Think mode uses higher temperature for deeper analysis
-      response = await client.generate(prompt, {
-        systemInstruction: CODEBASE_ANALYSIS_SYSTEM_PROMPT,
-        temperature: deepThink ? 0.7 : 0.5,
-        maxTokens: 16384  // Larger output token limit
-      });
+
+    // Always use thinking mode with direct GoogleGenAI call
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GEMINI_API_KEY environment variable is not set');
     }
+
+    const ai = new GoogleGenAI({ apiKey });
+
+    const config: any = {
+      thinkingConfig: { thinkingLevel },
+      systemInstruction: CODEBASE_ANALYSIS_SYSTEM_PROMPT,
+    };
+
+    const contents = [{
+      role: 'user',
+      parts: [{ text: prompt }]
+    }];
+
+    const apiResult = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      config,
+      contents,
+    });
+
+    response = apiResult.text || '';
 
     // ===== 5. Build return result =====
     const result: AnalyzeCodebaseResult = {

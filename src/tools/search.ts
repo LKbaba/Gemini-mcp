@@ -23,7 +23,7 @@ When answering questions:
 export interface SearchParams {
   query: string;
   context?: string;
-  thinkingLevel?: 'MINIMAL' | 'LOW' | 'MEDIUM' | 'HIGH';
+  thinkingLevel?: 'low' | 'high';
 }
 
 // Return interface
@@ -59,7 +59,7 @@ export async function handleSearch(
       validateString(params.context, 'context', 2);
     }
 
-    const thinkingLevel = params.thinkingLevel || 'HIGH';
+    const thinkingLevel = params.thinkingLevel || 'high';
 
     // Create AI client
     const ai = new GoogleGenAI({ apiKey });

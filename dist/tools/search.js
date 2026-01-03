@@ -24,7 +24,7 @@ export async function handleSearch(params, apiKey) {
         if (params.context) {
             validateString(params.context, 'context', 2);
         }
-        const thinkingLevel = params.thinkingLevel || 'HIGH';
+        const thinkingLevel = params.thinkingLevel || 'high';
         // Create AI client
         const ai = new GoogleGenAI({ apiKey });
         // Configure tools with Google Search
@@ -32,12 +32,10 @@ export async function handleSearch(params, apiKey) {
         const config = {
             tools,
         };
-        // Add thinking config if not NONE
-        if (thinkingLevel !== 'NONE') {
-            config.thinkingConfig = {
-                thinkingLevel,
-            };
-        }
+        // Add thinking config
+        config.thinkingConfig = {
+            thinkingLevel,
+        };
         // Build prompt
         let prompt = params.query;
         if (params.context) {
