@@ -304,8 +304,8 @@ export async function handleAnalyzeCodebase(params, client) {
             files: filesToAnalyze
         };
         const prompt = buildCodebasePrompt(promptParams, metrics, outputFormat);
-        // Determine thinking level (default high for complex analysis)
-        const thinkingLevel = params.thinkingLevel || 'high';
+        // Determine thinking level (default HIGH for complex analysis)
+        const thinkingLevel = params.thinkingLevel || 'HIGH';
         let response;
         // Always use thinking mode with direct GoogleGenAI call
         const apiKey = process.env.GEMINI_API_KEY;

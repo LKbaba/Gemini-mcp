@@ -145,9 +145,9 @@ export const TOOL_DEFINITIONS = [
                 },
                 thinkingLevel: {
                     type: 'string',
-                    enum: ['low', 'high'],
-                    description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
-                    default: 'high'
+                    enum: ['LOW', 'HIGH'],
+                    description: 'Thinking depth: LOW for speed, HIGH for complex analysis (default: HIGH)',
+                    default: 'HIGH'
                 }
             },
             required: ['screenshot']
@@ -293,9 +293,9 @@ export const TOOL_DEFINITIONS = [
                 },
                 thinkingLevel: {
                     type: 'string',
-                    enum: ['low', 'high'],
-                    description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
-                    default: 'high'
+                    enum: ['LOW', 'HIGH'],
+                    description: 'Thinking depth: LOW for speed, HIGH for complex analysis (default: HIGH)',
+                    default: 'HIGH'
                 },
                 outputFormat: {
                     type: 'string',
@@ -358,8 +358,8 @@ Features:
 - Ideal for: current events, latest documentation, real-time data, fact-checking
 
 Usage Tips:
-- Use thinkingLevel: 'low' for simple queries (faster response)
-- Use thinkingLevel: 'high' for complex analysis (default, deeper reasoning)
+- Use thinkingLevel: 'LOW' for simple queries (faster response)
+- Use thinkingLevel: 'HIGH' for complex analysis (default, deeper reasoning)
 - Use outputFormat: 'json' when you need structured data
 - Search results include source URLs in groundingMetadata`,
         inputSchema: {
@@ -375,9 +375,9 @@ Usage Tips:
                 },
                 thinkingLevel: {
                     type: 'string',
-                    enum: ['low', 'high'],
-                    description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
-                    default: 'high'
+                    enum: ['LOW', 'HIGH'],
+                    description: 'Thinking depth: LOW for speed, HIGH for complex analysis (default: HIGH)',
+                    default: 'HIGH'
                 },
                 outputFormat: {
                     type: 'string',

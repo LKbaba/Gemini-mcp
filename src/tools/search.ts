@@ -23,7 +23,7 @@ When answering questions:
 export interface SearchParams {
   query: string;
   context?: string;
-  thinkingLevel?: 'low' | 'high';
+  thinkingLevel?: 'LOW' | 'HIGH';
   outputFormat?: 'text' | 'json';
 }
 
@@ -61,7 +61,7 @@ export async function handleSearch(
       validateString(params.context, 'context', 2);
     }
 
-    const thinkingLevel = params.thinkingLevel || 'high';
+    const thinkingLevel = params.thinkingLevel || 'HIGH';
     const outputFormat = params.outputFormat || 'text';
 
     // Create AI client

@@ -64,10 +64,10 @@ export interface FixUIParams {
   targetState?: string;
   
   /**
-   * Thinking level for complex debugging (default: high)
-   * high is recommended for complex UI issues
+   * Thinking level for complex debugging (default: HIGH)
+   * HIGH is recommended for complex UI issues
    */
-  thinkingLevel?: 'low' | 'high';
+  thinkingLevel?: 'LOW' | 'HIGH';
 }
 
 export interface FixUIResult {
@@ -191,8 +191,8 @@ Format your response as JSON with this structure:
       }
     }
 
-    // Determine thinking level (default high for complex debugging)
-    const thinkingLevel = params.thinkingLevel || 'high';
+    // Determine thinking level (default HIGH for complex debugging)
+    const thinkingLevel = params.thinkingLevel || 'HIGH';
 
     let response: string;
 
