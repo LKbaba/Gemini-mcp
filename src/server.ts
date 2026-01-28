@@ -14,7 +14,7 @@ import { SERVER_INFO, MCP_VERSION, ERROR_CODES, TOOL_NAMES } from './config/cons
 import { createGeminiClient, GeminiClient } from './utils/gemini-client.js';
 import { handleAPIError, handleValidationError, handleInternalError, logError } from './utils/error-handler.js';
 import { TOOL_DEFINITIONS } from './tools/definitions.js';
-// v1.2.0: 精简为 5 个核心工具
+// v1.2.0: Streamlined to 5 core tools
 import {
   handleMultimodalQuery,
   handleAnalyzeContent,
@@ -136,7 +136,7 @@ async function handleToolsCall(request: MCPRequest): Promise<void> {
   try {
     let result: any;
 
-    // 路由到对应的工具处理函数 (v1.2.0: 5 个核心工具)
+    // Route to corresponding tool handler (v1.2.0: 5 core tools)
     switch (name) {
       case TOOL_NAMES.MULTIMODAL_QUERY:
         result = await handleMultimodalQuery(args, geminiClient);

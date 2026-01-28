@@ -3,7 +3,7 @@
  */
 // MCP protocol version
 export const MCP_VERSION = '2024-11-05';
-// 服务器信息
+// Server information
 export const SERVER_INFO = {
     name: 'mcp-server-gemini',
     version: '1.2.1',
@@ -20,7 +20,7 @@ export const API_CONFIG = {
     retryDelay: 1000, // 1 second
     maxImageSize: 10 * 1024 * 1024, // 10MB
 };
-// 工具名称 - v1.2.0 精简为 5 个核心工具
+// Tool names - v1.2.0 streamlined to 5 core tools
 export const TOOL_NAMES = {
     MULTIMODAL_QUERY: 'gemini_multimodal_query',
     ANALYZE_CONTENT: 'gemini_analyze_content',

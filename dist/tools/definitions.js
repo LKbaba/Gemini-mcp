@@ -1,29 +1,29 @@
 /**
- * MCP 工具定义
- * 符合 MCP 协议的工具 schema
+ * MCP Tool Definitions
+ * Tool schemas compliant with MCP protocol
  *
- * v1.2.0 更新：
- * - 精简为 5 个核心工具
- * - 所有工具新增 model 参数
+ * v1.2.0 Updates:
+ * - Streamlined to 5 core tools
+ * - Added model parameter to all tools
  */
 import { TOOL_NAMES } from '../config/constants.js';
-// 模型参数定义（大多数工具共享，默认 Pro）
+// Model parameter definition (shared by most tools, default: Pro)
 const MODEL_PARAMETER = {
     type: 'string',
     enum: ['gemini-3-pro-preview', 'gemini-3-flash-preview'],
     description: 'Gemini model to use (optional, default: gemini-3-pro-preview)'
 };
-// Search 工具专用模型参数（默认 Flash，因为搜索场景 Flash 更快且质量相当）
+// Search tool model parameter (default: Flash, faster response with comparable quality)
 const SEARCH_MODEL_PARAMETER = {
     type: 'string',
     enum: ['gemini-3-pro-preview', 'gemini-3-flash-preview'],
     description: 'Gemini model to use (optional, default: gemini-3-flash-preview for faster search)'
 };
 /**
- * 所有工具的定义
+ * All tool definitions
  */
 export const TOOL_DEFINITIONS = [
-    // 🖼️ 工具 1: gemini_multimodal_query
+    // 🖼️ Tool 1: gemini_multimodal_query
     {
         name: TOOL_NAMES.MULTIMODAL_QUERY,
         description: 'Query using images + text for multimodal understanding. Analyze designs, diagrams, screenshots, or any visual content with natural language questions.',
@@ -54,7 +54,7 @@ export const TOOL_DEFINITIONS = [
             required: ['prompt', 'images']
         }
     },
-    // 📄 工具 2: gemini_analyze_content
+    // 📄 Tool 2: gemini_analyze_content
     {
         name: TOOL_NAMES.ANALYZE_CONTENT,
         description: `Analyze code, documents, or data. Supports file path or direct content input. Provides summarization, code review, explanation, optimization, and debugging. Auto-detects content type and programming language.
@@ -63,12 +63,12 @@ TIP: This tool supports PARALLEL calls - analyze multiple files simultaneously f
         inputSchema: {
             type: 'object',
             properties: {
-                // 方式 1: 直接输入内容（保持向后兼容）
+                // Method 1: Direct content input (backward compatible)
                 content: {
                     type: 'string',
                     description: 'Content to analyze (direct input). Use this or filePath.'
                 },
-                // 方式 2: 文件路径输入
+                // Method 2: File path input
                 filePath: {
                     type: 'string',
                     description: 'File path to read and analyze (e.g., "./src/utils/parser.ts"). The tool will automatically read the file and detect the language. Use this or content.'
@@ -102,17 +102,17 @@ TIP: This tool supports PARALLEL calls - analyze multiple files simultaneously f
                 },
                 model: MODEL_PARAMETER
             },
-            required: [] // content 或 filePath 二选一
+            required: [] // Either content or filePath is required
         }
     },
-    // 📦 工具 3: gemini_analyze_codebase
+    // 📦 Tool 3: gemini_analyze_codebase
     {
         name: TOOL_NAMES.ANALYZE_CODEBASE,
         description: 'Analyze entire codebase using 1M token context. Supports directory path, file paths, or file contents. Provides architecture overview, identifies patterns, security issues, performance bottlenecks, and dependency problems.',
         inputSchema: {
             type: 'object',
             properties: {
-                // 方式 1: 目录路径
+                // Method 1: Directory path
                 directory: {
                     type: 'string',
                     description: 'Directory path to analyze (e.g., "./src" or "C:/Project/src"). The tool will automatically read files from this directory.'
@@ -127,13 +127,13 @@ TIP: This tool supports PARALLEL calls - analyze multiple files simultaneously f
                     items: { type: 'string' },
                     description: 'Glob patterns to exclude files (e.g., ["node_modules/**", "**/*.test.ts"]). Only used with directory parameter.'
                 },
-                // 方式 2: 文件路径列表
+                // Method 2: File path list
                 filePaths: {
                     type: 'array',
                     items: { type: 'string' },
                     description: 'List of file paths to analyze (e.g., ["./src/index.ts", "./src/utils/helper.ts"]). The tool will automatically read these files.'
                 },
-                // 方式 3: 文件内容数组（保持向后兼容）
+                // Method 3: File content array (backward compatible)
                 files: {
                     type: 'array',
                     items: {
@@ -170,10 +170,10 @@ TIP: This tool supports PARALLEL calls - analyze multiple files simultaneously f
                 },
                 model: MODEL_PARAMETER
             },
-            required: [] // 三种输入方式任选其一
+            required: [] // One of the three input methods is required
         }
     },
-    // 💡 工具 4: gemini_brainstorm
+    // 💡 Tool 4: gemini_brainstorm
     {
         name: TOOL_NAMES.BRAINSTORM,
         description: 'Generate creative ideas and solutions. Provides multiple ideas with pros/cons and feasibility assessment. Supports reading project context files to generate ideas that fit your project.',
@@ -188,12 +188,12 @@ TIP: This tool supports PARALLEL calls - analyze multiple files simultaneously f
                     type: 'string',
                     description: 'Optional: Additional context'
                 },
-                // 项目上下文文件路径
+                // Project context file path
                 contextFilePath: {
                     type: 'string',
                     description: 'Path to project context file (e.g., README.md, PRD.md). Ideas will be tailored to fit the project.'
                 },
-                // 多个上下文文件
+                // Multiple context files
                 contextFiles: {
                     type: 'array',
                     items: { type: 'string' },
@@ -214,7 +214,7 @@ TIP: This tool supports PARALLEL calls - analyze multiple files simultaneously f
             required: ['topic']
         }
     },
-    // 🔍 工具 5: gemini_search
+    // 🔍 Tool 5: gemini_search
     {
         name: TOOL_NAMES.SEARCH,
         description: `Search the web using Gemini's built-in Google Search grounding.

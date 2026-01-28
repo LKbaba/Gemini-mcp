@@ -321,7 +321,7 @@ export async function handleAnalyzeCodebase(params, client) {
                 role: 'user',
                 parts: [{ text: prompt }]
             }];
-        // v1.2.0: 使用用户选择的模型（默认 gemini-3-pro-preview）
+        // v1.2.0: Use user-selected model (default: gemini-3-pro-preview)
         const modelToUse = params.model || 'gemini-3-pro-preview';
         const apiResult = await ai.models.generateContent({
             model: modelToUse,

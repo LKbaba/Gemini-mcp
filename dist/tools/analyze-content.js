@@ -252,7 +252,7 @@ export async function handleAnalyzeContent(params, client) {
             language: detectedLanguage
         };
         const prompt = buildAnalysisPrompt(promptParams, detectedType, task, outputFormat, contentToAnalyze);
-        // v1.2.0: 设置用户选择的模型（默认 gemini-3-pro-preview）
+        // v1.2.0: Use user-selected model (default: gemini-3-pro-preview)
         const modelToUse = params.model || 'gemini-3-pro-preview';
         client.setModel(modelToUse);
         // Call Gemini API
