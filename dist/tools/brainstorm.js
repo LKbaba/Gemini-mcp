@@ -208,7 +208,10 @@ export async function handleBrainstorm(params, client) {
         }
         // Build prompt (with project context)
         const prompt = buildBrainstormPrompt(params, count, style, projectContext || undefined);
-        // Call Gemini API (using default model gemini-3-pro-preview)
+        // v1.2.0: 设置用户选择的模型（默认 gemini-3-pro-preview）
+        const modelToUse = params.model || 'gemini-3-pro-preview';
+        client.setModel(modelToUse);
+        // Call Gemini API
         const response = await client.generate(prompt, {
             systemInstruction: BRAINSTORM_SYSTEM_PROMPT,
             temperature: style === 'radical' ? 0.9 : (style === 'innovative' ? 0.8 : 0.6),

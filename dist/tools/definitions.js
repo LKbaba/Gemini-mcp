@@ -1,84 +1,23 @@
 /**
- * MCP tool definitions
- * Tool schemas compliant with MCP protocol
+ * MCP 工具定义
+ * 符合 MCP 协议的工具 schema
+ *
+ * v1.2.0 更新：
+ * - 精简为 5 个核心工具
+ * - 所有工具新增 model 参数
  */
 import { TOOL_NAMES } from '../config/constants.js';
+// Model parameter definition (shared by all tools)
+const MODEL_PARAMETER = {
+    type: 'string',
+    enum: ['gemini-3-pro-preview', 'gemini-3-flash-preview'],
+    description: 'Gemini model to use (optional, default: gemini-3-pro-preview)'
+};
 /**
- * Definitions of all tools
+ * 所有工具的定义
  */
 export const TOOL_DEFINITIONS = [
-    // 🎨 Tool 1: gemini_generate_ui
-    {
-        name: TOOL_NAMES.GENERATE_UI,
-        description: 'Generate HTML/CSS/JavaScript UI components from description or design image. Specializes in pixel-perfect implementations, responsive layouts, and smooth animations. Supports technology stack context for generating code that matches your project.',
-        inputSchema: {
-            type: 'object',
-            properties: {
-                description: {
-                    type: 'string',
-                    description: 'Description of the UI component to generate'
-                },
-                designImage: {
-                    type: 'string',
-                    description: 'Optional: Design image as file path (e.g., ./images/design.png) or Base64 data URI. File paths will be automatically converted to Base64.'
-                },
-                framework: {
-                    type: 'string',
-                    enum: ['vanilla', 'react', 'vue', 'svelte'],
-                    description: 'Target framework (default: vanilla)',
-                    default: 'vanilla'
-                },
-                // [NEW] Tech stack context
-                techContext: {
-                    type: 'object',
-                    properties: {
-                        cssFramework: {
-                            type: 'string',
-                            enum: ['tailwind', 'bootstrap', 'styled-components', 'css-modules', 'emotion'],
-                            description: 'CSS framework to use for styling'
-                        },
-                        uiLibrary: {
-                            type: 'string',
-                            enum: ['shadcn', 'antd', 'mui', 'chakra', 'radix'],
-                            description: 'UI component library to use'
-                        },
-                        typescript: {
-                            type: 'boolean',
-                            description: 'Use TypeScript with full type definitions'
-                        },
-                        stateManagement: {
-                            type: 'string',
-                            enum: ['zustand', 'redux', 'jotai', 'recoil'],
-                            description: 'State management library if needed'
-                        }
-                    },
-                    description: 'Technology stack context for generating code that matches your project'
-                },
-                // [NEW] Configuration file path
-                configPath: {
-                    type: 'string',
-                    description: 'Path to package.json for auto-detecting tech stack. The tool will analyze dependencies to determine CSS framework, UI library, TypeScript usage, etc.'
-                },
-                includeAnimation: {
-                    type: 'boolean',
-                    description: 'Include animations and transitions (default: true)',
-                    default: true
-                },
-                responsive: {
-                    type: 'boolean',
-                    description: 'Make the UI responsive (default: true)',
-                    default: true
-                },
-                style: {
-                    type: 'string',
-                    enum: ['modern', 'minimal', 'glassmorphism', 'neumorphism'],
-                    description: 'Optional: Design style preference'
-                }
-            },
-            required: ['description']
-        }
-    },
-    // 🖼️ Tool 2: gemini_multimodal_query
+    // 🖼️ 工具 1: gemini_multimodal_query
     {
         name: TOOL_NAMES.MULTIMODAL_QUERY,
         description: 'Query using images + text for multimodal understanding. Analyze designs, diagrams, screenshots, or any visual content with natural language questions.',
@@ -103,80 +42,25 @@ export const TOOL_DEFINITIONS = [
                 context: {
                     type: 'string',
                     description: 'Optional: Additional context for better understanding'
-                }
+                },
+                model: MODEL_PARAMETER
             },
             required: ['prompt', 'images']
         }
     },
-    // 🐛 Tool 3: gemini_fix_ui_from_screenshot (Visual Debug Loop)
-    {
-        name: TOOL_NAMES.FIX_UI,
-        description: `Visual Debug Loop - Identify and fix UI issues from screenshots.
-
-Core workflow:
-1. Analyze screenshot to identify visual problems
-2. Cross-reference with source code to locate root cause
-3. Generate git diff patches for precise fixes
-
-Best practice: Provide all three inputs for optimal results:
-- screenshot: The UI problem screenshot
-- sourceCodePath: Main source file path
-- issueDescription: What's wrong and expected behavior
-
-Output: Returns git diff format patches that can be directly applied with 'git apply'.`,
-        inputSchema: {
-            type: 'object',
-            properties: {
-                screenshot: {
-                    type: 'string',
-                    description: 'Screenshot of the UI problem as file path (e.g., ./screenshots/bug.png) or Base64 data URI. File paths will be automatically converted to Base64.'
-                },
-                sourceCodePath: {
-                    type: 'string',
-                    description: '[Recommended] Path to the main source code file causing the issue (e.g., "./src/components/LoginForm.tsx"). Required for generating accurate git diff patches.'
-                },
-                relatedFiles: {
-                    type: 'array',
-                    items: { type: 'string' },
-                    description: 'Paths to related files like CSS, parent components, or utilities (e.g., ["./src/styles/login.css", "./src/components/Button.tsx"])'
-                },
-                issueDescription: {
-                    type: 'string',
-                    description: '[Recommended] Description of the problem and expected behavior. The more specific, the better the fix.'
-                },
-                targetState: {
-                    type: 'string',
-                    description: 'Optional: Expected state as text description or reference image path'
-                },
-                currentCode: {
-                    type: 'string',
-                    description: '[Deprecated] Direct code input. Prefer using sourceCodePath for better context.'
-                },
-                thinkingLevel: {
-                    type: 'string',
-                    enum: ['low', 'high'],
-                    description: 'Thinking depth: low for speed, high for complex analysis (default: high)',
-                    default: 'high'
-                }
-            },
-            required: ['screenshot']
-        }
-    },
-    // ✨ Tool 4: gemini_create_animation removed
-    // Animation generation can be done via gemini_generate_ui tool by describing animation needs in the description
-    // 📄 Tool 4: gemini_analyze_content
+    // 📄 工具 2: gemini_analyze_content
     {
         name: TOOL_NAMES.ANALYZE_CONTENT,
         description: 'Analyze code, documents, or data. Supports file path or direct content input. Provides summarization, code review, explanation, optimization, and debugging. Auto-detects content type and programming language.',
         inputSchema: {
             type: 'object',
             properties: {
-                // Method 1: Direct content input (kept for backward compatibility)
+                // 方式 1: 直接输入内容（保持向后兼容）
                 content: {
                     type: 'string',
                     description: 'Content to analyze (direct input). Use this or filePath.'
                 },
-                // Method 2: File path input (new)
+                // 方式 2: 文件路径输入
                 filePath: {
                     type: 'string',
                     description: 'File path to read and analyze (e.g., "./src/utils/parser.ts"). The tool will automatically read the file and detect the language. Use this or content.'
@@ -207,19 +91,20 @@ Output: Returns git diff format patches that can be directly applied with 'git a
                     enum: ['text', 'json', 'markdown'],
                     description: 'Output format (default: markdown)',
                     default: 'markdown'
-                }
+                },
+                model: MODEL_PARAMETER
             },
-            required: [] // Changed to empty array, as either content or filePath is required
+            required: [] // content 或 filePath 二选一
         }
     },
-    // 📦 Tool 6: gemini_analyze_codebase
+    // 📦 工具 3: gemini_analyze_codebase
     {
         name: TOOL_NAMES.ANALYZE_CODEBASE,
         description: 'Analyze entire codebase using 1M token context. Supports directory path, file paths, or file contents. Provides architecture overview, identifies patterns, security issues, performance bottlenecks, and dependency problems.',
         inputSchema: {
             type: 'object',
             properties: {
-                // Method 1: Directory path (new)
+                // 方式 1: 目录路径
                 directory: {
                     type: 'string',
                     description: 'Directory path to analyze (e.g., "./src" or "C:/Project/src"). The tool will automatically read files from this directory.'
@@ -234,13 +119,13 @@ Output: Returns git diff format patches that can be directly applied with 'git a
                     items: { type: 'string' },
                     description: 'Glob patterns to exclude files (e.g., ["node_modules/**", "**/*.test.ts"]). Only used with directory parameter.'
                 },
-                // Method 2: List of file paths (new)
+                // 方式 2: 文件路径列表
                 filePaths: {
                     type: 'array',
                     items: { type: 'string' },
                     description: 'List of file paths to analyze (e.g., ["./src/index.ts", "./src/utils/helper.ts"]). The tool will automatically read these files.'
                 },
-                // Method 3: Array of file contents (kept for backward compatibility)
+                // 方式 3: 文件内容数组（保持向后兼容）
                 files: {
                     type: 'array',
                     items: {
@@ -274,12 +159,13 @@ Output: Returns git diff format patches that can be directly applied with 'git a
                     enum: ['markdown', 'json'],
                     description: 'Output format (default: markdown)',
                     default: 'markdown'
-                }
+                },
+                model: MODEL_PARAMETER
             },
-            required: [] // Changed to empty array, as any one of the three input methods is required
+            required: [] // 三种输入方式任选其一
         }
     },
-    // 💡 Tool 7: gemini_brainstorm
+    // 💡 工具 4: gemini_brainstorm
     {
         name: TOOL_NAMES.BRAINSTORM,
         description: 'Generate creative ideas and solutions. Provides multiple ideas with pros/cons and feasibility assessment. Supports reading project context files to generate ideas that fit your project.',
@@ -294,12 +180,12 @@ Output: Returns git diff format patches that can be directly applied with 'git a
                     type: 'string',
                     description: 'Optional: Additional context'
                 },
-                // [NEW] Project context file path
+                // 项目上下文文件路径
                 contextFilePath: {
                     type: 'string',
                     description: 'Path to project context file (e.g., README.md, PRD.md). Ideas will be tailored to fit the project.'
                 },
-                // [NEW] Multiple context files
+                // 多个上下文文件
                 contextFiles: {
                     type: 'array',
                     items: { type: 'string' },
@@ -314,12 +200,13 @@ Output: Returns git diff format patches that can be directly applied with 'git a
                     type: 'string',
                     enum: ['innovative', 'practical', 'radical'],
                     description: 'Optional: Brainstorming style'
-                }
+                },
+                model: MODEL_PARAMETER
             },
             required: ['topic']
         }
     },
-    // 🔍 Tool 8: gemini_search
+    // 🔍 工具 5: gemini_search
     {
         name: TOOL_NAMES.SEARCH,
         description: `Search the web using Gemini's built-in Google Search grounding.
@@ -356,19 +243,10 @@ Usage Tips:
                     enum: ['text', 'json'],
                     description: 'Output format: text for readable response, json for structured data (default: text)',
                     default: 'text'
-                }
+                },
+                model: MODEL_PARAMETER
             },
             required: ['query']
-        }
-    },
-    // 📋 Tool 9: list_models
-    {
-        name: TOOL_NAMES.LIST_MODELS,
-        description: 'List all available Gemini models with their capabilities, context windows, and use cases.',
-        inputSchema: {
-            type: 'object',
-            properties: {},
-            required: []
         }
     }
 ];

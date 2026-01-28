@@ -43,7 +43,8 @@ export async function handleSearch(params, apiKey) {
         if (params.context) {
             prompt = `Context: ${params.context}\n\nQuestion: ${params.query}`;
         }
-        const model = 'gemini-3-pro-preview';
+        // v1.2.0: 使用用户选择的模型（默认 gemini-3-pro-preview）
+        const model = params.model || 'gemini-3-pro-preview';
         const contents = [
             {
                 role: 'user',

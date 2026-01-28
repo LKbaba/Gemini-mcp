@@ -18,17 +18,13 @@ export const API_CONFIG = {
     retryDelay: 1000, // 1 second
     maxImageSize: 10 * 1024 * 1024, // 10MB
 };
-// Tool names
+// 工具名称 - v1.2.0 精简为 5 个核心工具
 export const TOOL_NAMES = {
-    GENERATE_UI: 'gemini_generate_ui',
     MULTIMODAL_QUERY: 'gemini_multimodal_query',
-    FIX_UI: 'gemini_fix_ui_from_screenshot',
-    // CREATE_ANIMATION removed - animation can be generated via generate_ui
     ANALYZE_CONTENT: 'gemini_analyze_content',
     ANALYZE_CODEBASE: 'gemini_analyze_codebase',
     BRAINSTORM: 'gemini_brainstorm',
-    SEARCH: 'gemini_search',
-    LIST_MODELS: 'list_models'
+    SEARCH: 'gemini_search'
 };
 // Error codes
 export const ERROR_CODES = {
