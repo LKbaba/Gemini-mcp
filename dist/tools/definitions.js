@@ -7,11 +7,17 @@
  * - 所有工具新增 model 参数
  */
 import { TOOL_NAMES } from '../config/constants.js';
-// Model parameter definition (shared by all tools)
+// 模型参数定义（大多数工具共享，默认 Pro）
 const MODEL_PARAMETER = {
     type: 'string',
     enum: ['gemini-3-pro-preview', 'gemini-3-flash-preview'],
     description: 'Gemini model to use (optional, default: gemini-3-pro-preview)'
+};
+// Search 工具专用模型参数（默认 Flash，因为搜索场景 Flash 更快且质量相当）
+const SEARCH_MODEL_PARAMETER = {
+    type: 'string',
+    enum: ['gemini-3-pro-preview', 'gemini-3-flash-preview'],
+    description: 'Gemini model to use (optional, default: gemini-3-flash-preview for faster search)'
 };
 /**
  * 所有工具的定义
@@ -51,7 +57,9 @@ export const TOOL_DEFINITIONS = [
     // 📄 工具 2: gemini_analyze_content
     {
         name: TOOL_NAMES.ANALYZE_CONTENT,
-        description: 'Analyze code, documents, or data. Supports file path or direct content input. Provides summarization, code review, explanation, optimization, and debugging. Auto-detects content type and programming language.',
+        description: `Analyze code, documents, or data. Supports file path or direct content input. Provides summarization, code review, explanation, optimization, and debugging. Auto-detects content type and programming language.
+
+TIP: This tool supports PARALLEL calls - analyze multiple files simultaneously for faster results.`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -218,9 +226,10 @@ Features:
 
 Usage Tips:
 - Use thinkingLevel: 'low' for simple queries (faster response)
-- Use thinkingLevel: 'high' for complex analysis (default, deeper reasoning)
+- Use thinkingLevel: 'high' for complex analysis (deeper reasoning)
 - Use outputFormat: 'json' when you need structured data
-- Search results include source URLs in groundingMetadata`,
+- Search results include source URLs in groundingMetadata
+- PARALLEL CALLS SUPPORTED: Search multiple queries simultaneously for faster results`,
         inputSchema: {
             type: 'object',
             properties: {
@@ -244,7 +253,7 @@ Usage Tips:
                     description: 'Output format: text for readable response, json for structured data (default: text)',
                     default: 'text'
                 },
-                model: MODEL_PARAMETER
+                model: SEARCH_MODEL_PARAMETER
             },
             required: ['query']
         }

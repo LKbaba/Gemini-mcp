@@ -43,8 +43,9 @@ export async function handleSearch(params, apiKey) {
         if (params.context) {
             prompt = `Context: ${params.context}\n\nQuestion: ${params.query}`;
         }
-        // v1.2.0: 使用用户选择的模型（默认 gemini-3-pro-preview）
-        const model = params.model || 'gemini-3-pro-preview';
+        // v1.2.0: 使用用户选择的模型
+        // 搜索场景默认使用 Flash，因为响应更快且质量相当
+        const model = params.model || 'gemini-3-flash-preview';
         const contents = [
             {
                 role: 'user',

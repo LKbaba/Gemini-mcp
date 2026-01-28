@@ -3,11 +3,13 @@
  */
 // MCP protocol version
 export const MCP_VERSION = '2024-11-05';
-// Server information
+// 服务器信息
 export const SERVER_INFO = {
     name: 'mcp-server-gemini',
-    version: '1.1.0',
-    description: 'Specialized MCP server for Gemini 3.0 Pro focused on UI generation and frontend development',
+    version: '1.2.1',
+    description: `Gemini AI MCP Server with 5 core tools.
+IMPORTANT: All tools support PARALLEL execution - call multiple tools simultaneously for better performance.
+Example: analyze multiple files or search multiple queries in parallel.`,
     author: 'LKbaba',
     basedOn: 'aliargun/mcp-server-gemini v4.2.2'
 };
