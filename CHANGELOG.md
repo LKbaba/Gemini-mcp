@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-09
+
+### Changed
+- **[BREAKING]** Default model updated from `gemini-3-pro-preview` to `gemini-3.1-pro-preview` due to Google's model retirement
+- Updated model configuration in `src/config/models.ts` to include Gemini 3.1 Pro Preview
+- Updated 4 tool files to use new default model (analyze-codebase, analyze-content, brainstorm, multimodal-query)
+- Updated tool definitions enum to include new model
+
+### Added
+- Automatic model mapping for deprecated models (backward compatibility)
+- Warning logs when using deprecated model names
+- `DEPRECATED_MODEL_MAPPING` in models.ts for seamless migration
+- Enhanced `getModelConfig()` function with auto-mapping support
+- Pricing information for Gemini 3.1 Pro Preview ($1.25/M input, $5.00/M output)
+
+### Fixed
+- Corrected model list in validator error messages (removed non-existent models)
+- Installed `@types/micromatch` to fix TypeScript compilation issues
+
+### Deprecated
+- `gemini-3-pro-preview` is now deprecated (retired 2026-03-09)
+- Will be automatically mapped to `gemini-3.1-pro-preview`
+
+### Migration Guide
+- **No action required**: Old model names are automatically mapped
+- **Recommended**: Update your code to use `gemini-3.1-pro-preview` explicitly
+- **Search tool**: Continues to use `gemini-3-flash-preview` (unchanged)
+
+### Technical Details
+- Files changed: 10
+- Lines of code: ~137
+- Backward compatible: Yes
+- Breaking changes: Only if you rely on exact model name matching
+
+---
+
 ## [1.1.0] - 2025-11-26
 
 ### 🚀 File System Access & Tool Enhancement

@@ -1,8 +1,8 @@
 # Gemini MCP Server
 
-> **Give Claude Code the power of Gemini 3.0**
+> **Give Claude Code the power of Gemini 3.1**
 
-An MCP server that connects Claude Code to Google's Gemini 3.0, unlocking capabilities that complement Claude's strengths.
+An MCP server that connects Claude Code to Google's Gemini 3.1, unlocking capabilities that complement Claude's strengths.
 
 ## Why Gemini + Claude?
 
@@ -44,6 +44,13 @@ Add to your MCP config file:
 
 ### 3. Restart Claude Code
 
+### Migration Notice (v1.3.0)
+
+If you're upgrading from v1.2.x:
+- The default model is now `gemini-3.1-pro-preview`
+- Old model names are automatically mapped (no config changes needed)
+- See [CHANGELOG.md](CHANGELOG.md) for details
+
 ## Tools (5)
 
 ### Research & Search
@@ -67,23 +74,25 @@ Add to your MCP config file:
 |------|-------------|
 | `gemini_brainstorm` | Generate creative ideas with project context. Supports reading README, PRD files. |
 
-## Model Selection (v1.2.0)
+## Model Selection (v1.3.0)
 
 All tools now support an optional `model` parameter:
 
 | Model | Speed | Best For |
 |-------|-------|----------|
-| `gemini-3-pro-preview` | Standard | Complex analysis, deep reasoning (default) |
-| `gemini-3-flash-preview` | Fast | Simple tasks, quick responses |
+| `gemini-3.1-pro-preview` | Standard | Complex analysis, deep reasoning, agentic workflows (default) |
+| `gemini-3-flash-preview` | Fast | Simple tasks, quick responses, search queries |
 
-**Example: Use Flash for faster response**
+**Note**: `gemini-3-pro-preview` is deprecated (retired 2026-03-09) and will be automatically mapped to `gemini-3.1-pro-preview`.
+
+**Example: Use the new default model**
 ```json
 {
   "name": "gemini_analyze_content",
   "arguments": {
     "filePath": "./src/index.ts",
     "task": "review",
-    "model": "gemini-3-flash-preview"
+    "model": "gemini-3.1-pro-preview"
   }
 }
 ```
