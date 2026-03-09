@@ -209,7 +209,7 @@ export async function handleBrainstorm(params, client) {
         // Build prompt (with project context)
         const prompt = buildBrainstormPrompt(params, count, style, projectContext || undefined);
         // v1.2.0: Use user-selected model (default: gemini-3-pro-preview)
-        const modelToUse = params.model || 'gemini-3-pro-preview';
+        const modelToUse = params.model || 'gemini-3.1-pro-preview';
         client.setModel(modelToUse);
         // Call Gemini API
         const response = await client.generate(prompt, {

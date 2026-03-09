@@ -60,8 +60,8 @@ export async function handleMultimodalQuery(params, client) {
         else if (outputFormat === 'code') {
             fullPrompt += `\n\nPlease provide your response as code only, no explanations.`;
         }
-        // v1.2.0: Use user-selected model (default: gemini-3-pro-preview)
-        const modelToUse = params.model || 'gemini-3-pro-preview';
+        // v1.3.0: 使用用户选择的模型（默认：gemini-3.1-pro-preview）
+        const modelToUse = params.model || 'gemini-3.1-pro-preview';
         client.setModel(modelToUse);
         // Call Gemini API with multimodal input
         const response = await client.generateMultimodal(fullPrompt, params.images, {

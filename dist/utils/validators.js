@@ -129,10 +129,17 @@ export function validateBrainstormStyle(value) {
 }
 /**
  * Validate model ID
+ * v1.3.0: 更新支持的模型列表
+ *
+ * 支持的模型（v1.3.0）：
+ * - gemini-3.1-pro-preview（默认，最新）
+ * - gemini-3-pro-preview（已废弃，自动映射到 3.1）
+ * - gemini-3-flash-preview（搜索工具默认）
+ * - gemini-2.5-pro（稳定版，2026-06-17 退役）
  */
 export function validateModel(modelId) {
     if (!isModelSupported(modelId)) {
-        throw new Error(`Model "${modelId}" is not supported. Use one of: gemini-3-pro-preview, gemini-2.5-pro, gemini-2.5-flash, gemini-2.5-flash-lite`);
+        throw new Error(`Model "${modelId}" is not supported. Use one of: gemini-3.1-pro-preview, gemini-3-pro-preview, gemini-3-flash-preview, gemini-2.5-pro`);
     }
 }
 /**

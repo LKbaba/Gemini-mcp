@@ -106,11 +106,11 @@ export interface AnalyzeCodebaseParams {
   thinkingLevel?: 'low' | 'high';
 
   /**
-   * v1.2.0: Model selection parameter
-   * Options: 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
-   * Default: 'gemini-3-pro-preview'
+   * v1.3.0: 模型选择参数
+   * 选项: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
+   * 默认: 'gemini-3.1-pro-preview'
    */
-  model?: 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
+  model?: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
 }
 
 // Return interface
@@ -456,7 +456,7 @@ export async function handleAnalyzeCodebase(
     }];
 
     // v1.2.0: Use user-selected model (default: gemini-3-pro-preview)
-    const modelToUse = params.model || 'gemini-3-pro-preview';
+    const modelToUse = params.model || 'gemini-3.1-pro-preview';
 
     const apiResult = await ai.models.generateContent({
       model: modelToUse,

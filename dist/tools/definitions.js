@@ -2,21 +2,23 @@
  * MCP Tool Definitions
  * Tool schemas compliant with MCP protocol
  *
- * v1.2.0 Updates:
- * - Streamlined to 5 core tools
- * - Added model parameter to all tools
+ * v1.3.0 Updates:
+ * - 更新默认模型为 gemini-3.1-pro-preview
+ * - 保留旧模型名称以支持向后兼容
  */
 import { TOOL_NAMES } from '../config/constants.js';
-// Model parameter definition (shared by most tools, default: Pro)
+// 模型参数定义（大多数工具共享，默认：3.1 Pro）
+// v1.3.0: 添加 gemini-3.1-pro-preview，保留旧模型以支持向后兼容
 const MODEL_PARAMETER = {
     type: 'string',
-    enum: ['gemini-3-pro-preview', 'gemini-3-flash-preview'],
-    description: 'Gemini model to use (optional, default: gemini-3-pro-preview)'
+    enum: ['gemini-3.1-pro-preview', 'gemini-3-pro-preview', 'gemini-3-flash-preview'],
+    description: 'Gemini model to use (optional, default: gemini-3.1-pro-preview)'
 };
-// Search tool model parameter (default: Flash, faster response with comparable quality)
+// 搜索工具模型参数（默认：Flash，更快的响应速度）
+// v1.3.0: 保持不变，继续使用 Flash
 const SEARCH_MODEL_PARAMETER = {
     type: 'string',
-    enum: ['gemini-3-pro-preview', 'gemini-3-flash-preview'],
+    enum: ['gemini-3.1-pro-preview', 'gemini-3-pro-preview', 'gemini-3-flash-preview'],
     description: 'Gemini model to use (optional, default: gemini-3-flash-preview for faster search)'
 };
 /**

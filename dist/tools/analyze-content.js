@@ -253,7 +253,7 @@ export async function handleAnalyzeContent(params, client) {
         };
         const prompt = buildAnalysisPrompt(promptParams, detectedType, task, outputFormat, contentToAnalyze);
         // v1.2.0: Use user-selected model (default: gemini-3-pro-preview)
-        const modelToUse = params.model || 'gemini-3-pro-preview';
+        const modelToUse = params.model || 'gemini-3.1-pro-preview';
         client.setModel(modelToUse);
         // Call Gemini API
         const response = await client.generate(prompt, {
