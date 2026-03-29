@@ -4,8 +4,9 @@
  * Priority: P2 - Phase 4
  */
 import { validateRequired, validateString, validateNumber } from '../utils/validators.js';
-import { handleAPIError, logError } from '../utils/error-handler.js';
+import { handleAPIError, handleValidationError, logError } from '../utils/error-handler.js';
 import { readFile, readFiles } from '../utils/file-reader.js';
+import { ValidationError, SecurityError } from '../utils/errors.js';
 // Brainstorming system prompt
 const BRAINSTORM_SYSTEM_PROMPT = `You are a creative innovation consultant with expertise in:
 - Product ideation and design thinking
@@ -166,7 +167,7 @@ export async function handleBrainstorm(params, client) {
         // Validate optional enum parameters
         const validStyles = ['innovative', 'practical', 'radical'];
         if (params.style && !validStyles.includes(params.style)) {
-            throw new Error(`Invalid style: ${params.style}. Must be one of: ${validStyles.join(', ')}`);
+            throw new ValidationError(`Invalid style: ${params.style}. Must be one of: ${validStyles.join(', ')}`);
         }
         // Validate count parameter
         if (params.count !== undefined) {
@@ -234,6 +235,9 @@ export async function handleBrainstorm(params, client) {
     }
     catch (error) {
         logError('brainstorm', error);
+        if (error instanceof ValidationError || error instanceof SecurityError) {
+            throw handleValidationError(error.message);
+        }
         throw handleAPIError(error);
     }
 }

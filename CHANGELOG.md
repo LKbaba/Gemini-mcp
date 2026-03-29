@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-03-23
+
+### Fixed
+- Upgraded `@google/genai` SDK 1.8.0 → 1.46.0, fixing `gemini-3.1-pro-preview` model being unusable (Bug1)
+- Fixed overly broad `'model'`/`'not found'` keyword matching in error handler that misclassified file-not-found errors as MODEL_NOT_SUPPORTED (Bug1)
+- Fixed `maxRetries`/`timeout` dead code that was never actually executed (Bug2, Bug6), replaced with SDK built-in retry via `httpOptions.retryOptions`
+- Fixed `analyze-codebase` tool ignoring the passed-in `client` parameter and reading API key directly from `process.env` (Bug3)
+- Fixed parameter validation errors being incorrectly classified as `API_ERROR (-32000)` instead of `INVALID_PARAMS (-32602)` (Bug4)
+- Fixed `GeminiClient` default model still pointing to retired `gemini-3-pro-preview` instead of using `getDefaultModel()` (Bug5)
+- Fixed `MCPError` not being an `Error` instance, causing missing stack traces and failed `instanceof` checks (Bug7)
+- Enhanced API key sensitive information sanitization to cover URL `?key=`, Bearer tokens, and raw `AIzaSy...` keys (Bug8)
+
+### Changed
+- Unified API calling pattern across all 5 tools with new `createGeminiAI()` factory function
+- Introduced `ValidationError` / `SecurityError` error classes for precise error classification in tool catch blocks
+- Marked `GeminiClient` as `@deprecated`, recommending `createGeminiAI()` for new code
+- All error branches now pass through original `error.message` for transparency (no more fixed error text replacing real API messages)
+
+---
+
 ## [1.3.0] - 2026-03-09
 
 ### Changed

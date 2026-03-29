@@ -4,16 +4,15 @@
  */
 
 import { GoogleGenAI } from '@google/genai';
-import { getModelConfig } from '../config/models.js';
+import { getModelConfig, getDefaultModel } from '../config/models.js';
 import { API_CONFIG, ERROR_CODES } from '../config/constants.js';
+import { createGeminiAI } from './gemini-factory.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
 export interface GeminiClientConfig {
   apiKey: string;
   model?: string;
-  timeout?: number;
-  maxRetries?: number;
 }
 
 export interface GenerateOptions {
@@ -84,19 +83,24 @@ export function convertImageToInlineData(image: string): { mimeType: string; dat
   }
 }
 
+/**
+ * @deprecated Use `createGeminiAI(apiKey)` from `./gemini-factory.js` instead.
+ * GeminiClient is kept for backward compatibility but will be removed in a future version.
+ * The factory function provides SDK-native retry and timeout via httpOptions.
+ */
 export class GeminiClient {
   private client: GoogleGenAI;
   private modelId: string;
   private config: Required<GeminiClientConfig>;
 
   constructor(config: GeminiClientConfig) {
-    this.client = new GoogleGenAI({ apiKey: config.apiKey });
-    this.modelId = config.model || 'gemini-3-pro-preview';
+    // Use factory function for SDK-native retry and timeout (Bug2, Bug6 fix)
+    this.client = createGeminiAI(config.apiKey);
+    // Use getDefaultModel() instead of hardcoded model name (Bug5 fix)
+    this.modelId = config.model || getDefaultModel().id;
     this.config = {
       apiKey: config.apiKey,
       model: this.modelId,
-      timeout: config.timeout || API_CONFIG.timeout,
-      maxRetries: config.maxRetries || API_CONFIG.maxRetries
     };
   }
 
@@ -197,6 +201,15 @@ export class GeminiClient {
    */
   getModel(): string {
     return this.modelId;
+  }
+
+  /**
+   * Get the API key used by this client.
+   * Exposed so tools can use createGeminiAI() with the same key
+   * instead of reading from process.env directly.
+   */
+  getApiKey(): string {
+    return this.config.apiKey;
   }
 
   /**

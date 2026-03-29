@@ -17,10 +17,16 @@ export interface MCPResponse {
   };
 }
 
-export interface MCPError {
+export class MCPError extends Error {
   code: number;
-  message: string;
   data?: any;
+
+  constructor(code: number, message: string, data?: any) {
+    super(message);
+    this.name = 'MCPError';
+    this.code = code;
+    this.data = data;
+  }
 }
 
 // Connection Management

@@ -8,9 +8,9 @@
  * - Retained content parameter: Backward compatible with original calling method
  */
 import { validateRequired, validateString, validateArray } from '../utils/validators.js';
-import { handleAPIError, logError } from '../utils/error-handler.js';
+import { handleAPIError, handleValidationError, logError } from '../utils/error-handler.js';
 import { readFile } from '../utils/file-reader.js';
-import { SecurityError } from '../utils/security.js';
+import { ValidationError, SecurityError } from '../utils/errors.js';
 // Content analysis system prompt
 const ANALYZE_CONTENT_SYSTEM_PROMPT = `You are a versatile code and document analyst with expertise in:
 - Code quality analysis (any programming language)
@@ -189,7 +189,7 @@ export async function handleAnalyzeContent(params, client) {
         const hasContent = !!params.content;
         // Validate that at least one input method is provided
         if (!hasFilePath && !hasContent) {
-            throw new Error('One of filePath or content parameter is required. ' +
+            throw new ValidationError('One of filePath or content parameter is required. ' +
                 'Please use filePath to pass a file path, or use content to pass content directly.');
         }
         // Validate optional enum parameters
@@ -197,13 +197,13 @@ export async function handleAnalyzeContent(params, client) {
         const validTasks = ['summarize', 'review', 'explain', 'optimize', 'debug'];
         const validFormats = ['text', 'json', 'markdown'];
         if (params.type && !validTypes.includes(params.type)) {
-            throw new Error(`Invalid type: ${params.type}. Must be one of: ${validTypes.join(', ')}`);
+            throw new ValidationError(`Invalid type: ${params.type}. Must be one of: ${validTypes.join(', ')}`);
         }
         if (params.task && !validTasks.includes(params.task)) {
-            throw new Error(`Invalid task: ${params.task}. Must be one of: ${validTasks.join(', ')}`);
+            throw new ValidationError(`Invalid task: ${params.task}. Must be one of: ${validTasks.join(', ')}`);
         }
         if (params.outputFormat && !validFormats.includes(params.outputFormat)) {
-            throw new Error(`Invalid outputFormat: ${params.outputFormat}. Must be one of: ${validFormats.join(', ')}`);
+            throw new ValidationError(`Invalid outputFormat: ${params.outputFormat}. Must be one of: ${validFormats.join(', ')}`);
         }
         if (params.focus) {
             validateArray(params.focus, 'focus', 1);
@@ -225,7 +225,7 @@ export async function handleAnalyzeContent(params, client) {
             }
             catch (error) {
                 if (error instanceof SecurityError) {
-                    throw new Error(`Security validation failed: ${error.message}`);
+                    throw error; // Let SecurityError propagate to outer catch
                 }
                 throw error;
             }
@@ -292,6 +292,9 @@ export async function handleAnalyzeContent(params, client) {
     }
     catch (error) {
         logError('analyzeContent', error);
+        if (error instanceof ValidationError || error instanceof SecurityError) {
+            throw handleValidationError(error.message);
+        }
         throw handleAPIError(error);
     }
 }

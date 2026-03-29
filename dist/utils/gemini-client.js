@@ -2,8 +2,8 @@
  * Gemini API client wrapper
  * Provides unified API interface with error handling and retry logic
  */
-import { GoogleGenAI } from '@google/genai';
-import { API_CONFIG } from '../config/constants.js';
+import { getDefaultModel } from '../config/models.js';
+import { createGeminiAI } from './gemini-factory.js';
 import * as fs from 'fs';
 import * as path from 'path';
 /**
@@ -58,18 +58,23 @@ export function convertImageToInlineData(image) {
         throw new Error(`Failed to read image file "${image}": ${error.message}`);
     }
 }
+/**
+ * @deprecated Use `createGeminiAI(apiKey)` from `./gemini-factory.js` instead.
+ * GeminiClient is kept for backward compatibility but will be removed in a future version.
+ * The factory function provides SDK-native retry and timeout via httpOptions.
+ */
 export class GeminiClient {
     client;
     modelId;
     config;
     constructor(config) {
-        this.client = new GoogleGenAI({ apiKey: config.apiKey });
-        this.modelId = config.model || 'gemini-3-pro-preview';
+        // Use factory function for SDK-native retry and timeout (Bug2, Bug6 fix)
+        this.client = createGeminiAI(config.apiKey);
+        // Use getDefaultModel() instead of hardcoded model name (Bug5 fix)
+        this.modelId = config.model || getDefaultModel().id;
         this.config = {
             apiKey: config.apiKey,
             model: this.modelId,
-            timeout: config.timeout || API_CONFIG.timeout,
-            maxRetries: config.maxRetries || API_CONFIG.maxRetries
         };
     }
     /**
@@ -158,6 +163,14 @@ export class GeminiClient {
      */
     getModel() {
         return this.modelId;
+    }
+    /**
+     * Get the API key used by this client.
+     * Exposed so tools can use createGeminiAI() with the same key
+     * instead of reading from process.env directly.
+     */
+    getApiKey() {
+        return this.config.apiKey;
     }
     /**
      * Error handling

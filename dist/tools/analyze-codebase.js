@@ -9,11 +9,12 @@
  * - Added include/exclude parameters: Support glob pattern filtering
  * - Retained files parameter: Backward compatible with original usage
  */
-import { GoogleGenAI } from '@google/genai';
 import { validateRequired, validateArray } from '../utils/validators.js';
-import { handleAPIError, logError } from '../utils/error-handler.js';
+import { handleAPIError, handleValidationError, logError } from '../utils/error-handler.js';
 import { readDirectory, readFiles } from '../utils/file-reader.js';
-import { SecurityError } from '../utils/security.js';
+import { ValidationError, SecurityError } from '../utils/errors.js';
+import { createGeminiAI } from '../utils/gemini-factory.js';
+import { getDefaultModel } from '../config/models.js';
 // Codebase analysis system prompt
 const CODEBASE_ANALYSIS_SYSTEM_PROMPT = `You are a senior software architect with expertise in:
 - System architecture and design patterns
@@ -210,17 +211,17 @@ export async function handleAnalyzeCodebase(params, client) {
         const hasFiles = params.files && params.files.length > 0;
         // Validate at least one input method is provided
         if (!hasDirectory && !hasFilePaths && !hasFiles) {
-            throw new Error('One of directory, filePaths, or files parameter is required. ' +
+            throw new ValidationError('One of directory, filePaths, or files parameter is required. ' +
                 'Use directory to pass a directory path, filePaths to pass a file path list, or files to pass a file content array.');
         }
         // Validate optional enum parameters
         const validFocusAreas = ['architecture', 'security', 'performance', 'dependencies', 'patterns'];
         const validFormats = ['markdown', 'json'];
         if (params.focus && !validFocusAreas.includes(params.focus)) {
-            throw new Error(`Invalid focus: ${params.focus}. Must be one of: ${validFocusAreas.join(', ')}`);
+            throw new ValidationError(`Invalid focus: ${params.focus}. Must be one of: ${validFocusAreas.join(', ')}`);
         }
         if (params.outputFormat && !validFormats.includes(params.outputFormat)) {
-            throw new Error(`Invalid outputFormat: ${params.outputFormat}. Must be one of: ${validFormats.join(', ')}`);
+            throw new ValidationError(`Invalid outputFormat: ${params.outputFormat}. Must be one of: ${validFormats.join(', ')}`);
         }
         // ===== 2. Get file contents =====
         let filesToAnalyze;
@@ -233,7 +234,7 @@ export async function handleAnalyzeCodebase(params, client) {
                     exclude: params.exclude
                 });
                 if (fileContents.length === 0) {
-                    throw new Error(`No matching files found in directory "${params.directory}".` +
+                    throw new ValidationError(`No matching files found in directory "${params.directory}".` +
                         (params.include ? ` Include patterns: ${params.include.join(', ')}` : '') +
                         (params.exclude ? ` Exclude patterns: ${params.exclude.join(', ')}` : ''));
                 }
@@ -241,9 +242,8 @@ export async function handleAnalyzeCodebase(params, client) {
                 console.log(`[analyze_codebase] Successfully read ${filesToAnalyze.length} files`);
             }
             catch (error) {
-                // Handle security errors
                 if (error instanceof SecurityError) {
-                    throw new Error(`Security validation failed: ${error.message}`);
+                    throw error; // Let SecurityError propagate to outer catch
                 }
                 throw error;
             }
@@ -254,14 +254,14 @@ export async function handleAnalyzeCodebase(params, client) {
             try {
                 const fileContents = await readFiles(params.filePaths);
                 if (fileContents.length === 0) {
-                    throw new Error('All specified files could not be read. Please check if file paths are correct.');
+                    throw new ValidationError('All specified files could not be read. Please check if file paths are correct.');
                 }
                 filesToAnalyze = convertFileContents(fileContents);
                 console.log(`[analyze_codebase] Successfully read ${filesToAnalyze.length} files`);
             }
             catch (error) {
                 if (error instanceof SecurityError) {
-                    throw new Error(`Security validation failed: ${error.message}`);
+                    throw error; // Let SecurityError propagate to outer catch
                 }
                 throw error;
             }
@@ -274,10 +274,10 @@ export async function handleAnalyzeCodebase(params, client) {
             for (let i = 0; i < params.files.length; i++) {
                 const file = params.files[i];
                 if (!file.path || typeof file.path !== 'string') {
-                    throw new Error(`File at index ${i} is missing required 'path' property`);
+                    throw new ValidationError(`File at index ${i} is missing required 'path' property`);
                 }
                 if (!file.content || typeof file.content !== 'string') {
-                    throw new Error(`File at index ${i} is missing required 'content' property`);
+                    throw new ValidationError(`File at index ${i} is missing required 'content' property`);
                 }
             }
             filesToAnalyze = params.files;
@@ -307,12 +307,8 @@ export async function handleAnalyzeCodebase(params, client) {
         // Determine thinking level (default high for complex analysis)
         const thinkingLevel = params.thinkingLevel || 'high';
         let response;
-        // Always use thinking mode with direct GoogleGenAI call
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error('GEMINI_API_KEY environment variable is not set');
-        }
-        const ai = new GoogleGenAI({ apiKey });
+        // Use the client's API key with factory function (Bug3 fix: no longer reads from process.env)
+        const ai = createGeminiAI(client.getApiKey());
         const config = {
             thinkingConfig: { thinkingLevel },
             systemInstruction: CODEBASE_ANALYSIS_SYSTEM_PROMPT,
@@ -321,8 +317,8 @@ export async function handleAnalyzeCodebase(params, client) {
                 role: 'user',
                 parts: [{ text: prompt }]
             }];
-        // v1.2.0: Use user-selected model (default: gemini-3-pro-preview)
-        const modelToUse = params.model || 'gemini-3.1-pro-preview';
+        // Use user-selected model or default from config
+        const modelToUse = params.model || getDefaultModel().id;
         const apiResult = await ai.models.generateContent({
             model: modelToUse,
             config,
@@ -369,6 +365,9 @@ export async function handleAnalyzeCodebase(params, client) {
     }
     catch (error) {
         logError('analyzeCodebase', error);
+        if (error instanceof ValidationError || error instanceof SecurityError) {
+            throw handleValidationError(error.message);
+        }
         throw handleAPIError(error);
     }
 }

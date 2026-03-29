@@ -10,8 +10,9 @@ import {
   validateString,
   validateNumber
 } from '../utils/validators.js';
-import { handleAPIError, logError } from '../utils/error-handler.js';
+import { handleAPIError, handleValidationError, logError } from '../utils/error-handler.js';
 import { readFile, readFiles, FileContent } from '../utils/file-reader.js';
+import { ValidationError, SecurityError } from '../utils/errors.js';
 
 // Brainstorming system prompt
 const BRAINSTORM_SYSTEM_PROMPT = `You are a creative innovation consultant with expertise in:
@@ -237,7 +238,7 @@ export async function handleBrainstorm(
     // Validate optional enum parameters
     const validStyles = ['innovative', 'practical', 'radical'];
     if (params.style && !validStyles.includes(params.style)) {
-      throw new Error(`Invalid style: ${params.style}. Must be one of: ${validStyles.join(', ')}`);
+      throw new ValidationError(`Invalid style: ${params.style}. Must be one of: ${validStyles.join(', ')}`);
     }
 
     // Validate count parameter
@@ -318,6 +319,9 @@ export async function handleBrainstorm(
 
   } catch (error: any) {
     logError('brainstorm', error);
+    if (error instanceof ValidationError || error instanceof SecurityError) {
+      throw handleValidationError(error.message);
+    }
     throw handleAPIError(error);
   }
 }

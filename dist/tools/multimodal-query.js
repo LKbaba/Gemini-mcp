@@ -4,7 +4,8 @@
  * Priority: P0 - Core functionality
  */
 import { validateRequired, validateString, validateArray, validateOutputFormat } from '../utils/validators.js';
-import { handleAPIError, logError } from '../utils/error-handler.js';
+import { handleAPIError, handleValidationError, logError } from '../utils/error-handler.js';
+import { ValidationError, SecurityError } from '../utils/errors.js';
 // System prompt for multimodal query
 const MULTIMODAL_QUERY_SYSTEM_PROMPT = `You are a visual understanding expert with deep knowledge of:
 - UI/UX design patterns and principles
@@ -80,6 +81,9 @@ export async function handleMultimodalQuery(params, client) {
     }
     catch (error) {
         logError('multimodalQuery', error);
+        if (error instanceof ValidationError || error instanceof SecurityError) {
+            throw handleValidationError(error.message);
+        }
         throw handleAPIError(error);
     }
 }

@@ -3,12 +3,13 @@
  * Web search using Gemini's built-in Google Search grounding
  */
 
-import { GoogleGenAI } from '@google/genai';
 import {
   validateRequired,
   validateString
 } from '../utils/validators.js';
-import { handleAPIError, logError } from '../utils/error-handler.js';
+import { handleAPIError, handleValidationError, logError } from '../utils/error-handler.js';
+import { createGeminiAI } from '../utils/gemini-factory.js';
+import { ValidationError, SecurityError } from '../utils/errors.js';
 
 // Search system prompt
 const SEARCH_SYSTEM_PROMPT = `You are a helpful research assistant with access to Google Search.
@@ -68,8 +69,8 @@ export async function handleSearch(
     const thinkingLevel = params.thinkingLevel || 'high';
     const outputFormat = params.outputFormat || 'text';
 
-    // Create AI client
-    const ai = new GoogleGenAI({ apiKey });
+    // Create AI client with built-in retry and timeout
+    const ai = createGeminiAI(apiKey);
 
     // Configure tools with Google Search
     const tools = [{ googleSearch: {} }];
@@ -143,6 +144,9 @@ export async function handleSearch(
 
   } catch (error: any) {
     logError('search', error);
+    if (error instanceof ValidationError || error instanceof SecurityError) {
+      throw handleValidationError(error.message);
+    }
     throw handleAPIError(error);
   }
 }
