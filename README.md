@@ -58,9 +58,9 @@ More secure, uses Google Cloud IAM authentication.
 2. A service account with **Vertex AI User** role ([create one here](https://console.cloud.google.com/iam-admin/serviceaccounts))
 
 **Setup (2 minutes):**
-1. Create a service account in GCP Console → download JSON key
-2. Open the JSON file → copy its entire content
-3. Paste directly as env in MCP config — **that's it!**
+1. Create a service account in GCP Console → download JSON key file
+2. Open the JSON key file, copy **all** key-value pairs
+3. Paste them into the `env` section of your MCP config:
 
 ```json
 {
@@ -71,34 +71,53 @@ More secure, uses Google Cloud IAM authentication.
       "env": {
         "type": "service_account",
         "project_id": "your-project-id",
-        "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+        "private_key_id": "key-id-here",
+        "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEv...\n-----END PRIVATE KEY-----\n",
         "client_email": "your-sa@your-project.iam.gserviceaccount.com",
-        "...": "... (other fields from the JSON file)"
+        "client_id": "123456789",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/your-sa%40your-project.iam.gserviceaccount.com",
+        "universe_domain": "googleapis.com"
       }
     }
   }
 }
 ```
 
-The server **auto-detects** service account credentials from env vars. No extra configuration needed.
+The server **auto-detects** service account credentials from env vars — no `GOOGLE_GENAI_USE_VERTEXAI` or `GOOGLE_CLOUD_PROJECT` needed. Just paste and go.
 
-> **Advanced options:** You can also use `GOOGLE_GENAI_USE_VERTEXAI=true` + `GOOGLE_CREDENTIALS_JSON` (stringified JSON), `GOOGLE_APPLICATION_CREDENTIALS` (file path), or `gcloud auth application-default login`.
+> **Tip:** On Windows, the server automatically fixes slash corruption (`/` → `\`) in PEM private keys that some MCP clients introduce.
+
+> **Advanced options:** You can also use `GOOGLE_GENAI_USE_VERTEXAI=true` + `GOOGLE_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS` (file path), or `gcloud auth application-default login`. See the environment variables reference below.
 
 <details>
 <summary>Environment variables reference</summary>
 
-| Variable | Mode | Required | Description |
-|----------|------|----------|-------------|
-| `GEMINI_API_KEY` | AI Studio | Yes | API key from Google AI Studio |
-| `GOOGLE_GENAI_USE_VERTEXAI` | Vertex AI | Yes | Set to `"true"` to enable |
-| `GOOGLE_CLOUD_PROJECT` | Vertex AI | Yes | GCP project ID |
-| `GOOGLE_CLOUD_LOCATION` | Vertex AI | No | Region (default: `global`) |
-| `GOOGLE_CREDENTIALS_JSON` | Vertex AI | No* | Service account JSON content (paste directly) |
-| `GOOGLE_APPLICATION_CREDENTIALS` | Vertex AI | No* | Path to service account JSON key file |
+**Paste JSON approach** (Option 2 above — simplest for Vertex AI):
+
+Just paste the service account JSON fields directly into `env`. No extra variables needed — the server auto-detects `type: "service_account"`.
+
+**Explicit Vertex AI mode** (advanced):
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GOOGLE_GENAI_USE_VERTEXAI` | Yes | Set to `"true"` to enable |
+| `GOOGLE_CLOUD_PROJECT` | Yes | GCP project ID |
+| `GOOGLE_CLOUD_LOCATION` | No | Region (default: `global`) |
+| `GOOGLE_CREDENTIALS_JSON` | No* | Entire service account JSON as a single string |
+| `GOOGLE_APPLICATION_CREDENTIALS` | No* | File path to service account JSON key |
 
 \* At least one credential source is needed: `GOOGLE_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS`, or `gcloud` ADC.
 
-If both `GEMINI_API_KEY` and `GOOGLE_GENAI_USE_VERTEXAI` are set, Vertex AI takes priority.
+**AI Studio mode:**
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GEMINI_API_KEY` | Yes | API key from [Google AI Studio](https://aistudio.google.com/apikey) |
+
+If both modes are configured, Vertex AI takes priority.
 </details>
 
 ### Migration Notice (v1.3.0+)

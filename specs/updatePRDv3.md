@@ -122,7 +122,7 @@
   "mcpServers": {
     "gemini": {
       "command": "npx",
-      "args": ["-y", "@anthropic/mcp-server-gemini"],
+      "args": ["-y", "@lkbaba/mcp-server-gemini"],
       "env": {
         "GEMINI_API_KEY": "AIzaSy..."
       }
@@ -138,7 +138,7 @@
   "mcpServers": {
     "gemini": {
       "command": "npx",
-      "args": ["-y", "@anthropic/mcp-server-gemini"],
+      "args": ["-y", "@lkbaba/mcp-server-gemini"],
       "env": {
         "GOOGLE_GENAI_USE_VERTEXAI": "true",
         "GOOGLE_CLOUD_PROJECT": "my-project-id",
@@ -161,7 +161,7 @@
   "mcpServers": {
     "gemini": {
       "command": "npx",
-      "args": ["-y", "@anthropic/mcp-server-gemini"],
+      "args": ["-y", "@lkbaba/mcp-server-gemini"],
       "env": {
         "type": "service_account",
         "project_id": "my-project-id",
