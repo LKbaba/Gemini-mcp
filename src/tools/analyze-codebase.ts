@@ -106,9 +106,9 @@ export interface AnalyzeCodebaseParams {
   thinkingLevel?: 'low' | 'high';
 
   /**
-   * v1.3.0: 模型选择参数
-   * 选项: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
-   * 默认: 'gemini-3.1-pro-preview'
+   * v1.3.0: Model selection parameter
+   * Options: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
+   * Default: 'gemini-3.1-pro-preview'
    */
   model?: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
 }

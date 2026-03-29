@@ -1,7 +1,7 @@
 /**
  * Gemini model configuration
  * Based on official documentation: https://ai.google.dev/gemini-api/docs/models
- * Last updated: March 2026 (v1.3.0 - 迁移到 Gemini 3.1 Pro Preview)
+ * Last updated: March 2026 (v1.3.0 - migrated to Gemini 3.1 Pro Preview)
  */
 
 /**
@@ -55,10 +55,10 @@ export interface ModelConfig {
 
 /**
  * Supported Gemini model list
- * v1.3.0: 添加 Gemini 3.1 Pro Preview，替代已退役的 3.0 Pro Preview
+ * v1.3.0: Added Gemini 3.1 Pro Preview, replacing the retired 3.0 Pro Preview
  */
 export const SUPPORTED_MODELS: Record<string, ModelConfig> = {
-  // v1.3.0: 新增 Gemini 3.1 Pro Preview（默认模型）
+  // v1.3.0: New Gemini 3.1 Pro Preview (default model)
   'gemini-3.1-pro-preview': {
     id: 'gemini-3.1-pro-preview',
     name: 'Gemini 3.1 Pro Preview',
@@ -85,7 +85,7 @@ export const SUPPORTED_MODELS: Record<string, ModelConfig> = {
       outputPerMillion: '$5.00'
     }
   },
-  // v1.3.0: 已废弃（2026-03-09 退役），保留以支持向后兼容
+  // v1.3.0: Deprecated (retired 2026-03-09), retained for backward compatibility
   'gemini-3-pro-preview': {
     id: 'gemini-3-pro-preview',
     name: 'Gemini 3.0 Pro Preview',
@@ -106,7 +106,7 @@ export const SUPPORTED_MODELS: Record<string, ModelConfig> = {
     useCases: ['UI generation', 'Frontend development', 'Design to code', 'Interactive animations', 'Complex reasoning'],
     thinking: true,
     lastUpdate: 'January 2026',
-    isDefault: false // v1.3.0: 不再是默认模型
+    isDefault: false // v1.3.0: No longer the default model
   },
   'gemini-3-flash-preview': {
     id: 'gemini-3-flash-preview',
@@ -155,19 +155,19 @@ export const SUPPORTED_MODELS: Record<string, ModelConfig> = {
 };
 
 /**
- * 废弃模型映射表
- * v1.3.0: 自动将旧模型名称映射到新模型，保证向后兼容
+ * Deprecated model mapping table
+ * v1.3.0: Automatically maps old model names to new models for backward compatibility
  *
- * 当用户使用已废弃的模型名称时，系统会自动映射到推荐的新模型，
- * 并输出警告日志提示用户更新配置。
+ * When a user specifies a deprecated model name, the system automatically maps it
+ * to the recommended new model and emits a warning log prompting the user to update their config.
  */
 export const DEPRECATED_MODEL_MAPPING: Record<string, string> = {
-  'gemini-3-pro-preview': 'gemini-3.1-pro-preview', // 2026-03-09 退役
+  'gemini-3-pro-preview': 'gemini-3.1-pro-preview', // deprecated 2026-03-09
 };
 
 /**
  * Get default model
- * v1.3.0: 默认模型更新为 gemini-3.1-pro-preview
+ * v1.3.0: Default model updated to gemini-3.1-pro-preview
  */
 export function getDefaultModel(): ModelConfig {
   return SUPPORTED_MODELS['gemini-3.1-pro-preview'];
@@ -175,7 +175,7 @@ export function getDefaultModel(): ModelConfig {
 
 /**
  * Get model configuration
- * v1.3.0: 增强支持废弃模型自动映射
+ * v1.3.0: Enhanced to support automatic deprecated model mapping
  *
  * @param modelId - Model ID
  * @returns Model configuration, returns default model if not found
@@ -185,7 +185,7 @@ export function getModelConfig(modelId?: string): ModelConfig {
     return getDefaultModel();
   }
 
-  // v1.3.0: 检查是否为废弃模型，自动映射到新模型
+  // v1.3.0: Check if the model is deprecated and auto-map to new model
   if (modelId in DEPRECATED_MODEL_MAPPING) {
     const newModelId = DEPRECATED_MODEL_MAPPING[modelId];
     console.warn(
@@ -217,7 +217,7 @@ export function getAllModels(): ModelConfig[] {
 
 /**
  * Model selection recommendations
- * v1.3.0: 更新 Pro 相关推荐为 gemini-3.1-pro-preview
+ * v1.3.0: Updated Pro-related recommendations to gemini-3.1-pro-preview
  */
 export const MODEL_RECOMMENDATIONS = {
   ui_generation: 'gemini-3.1-pro-preview',

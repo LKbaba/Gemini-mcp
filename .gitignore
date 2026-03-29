@@ -12,6 +12,9 @@ vertex-ai-*.json
 # Reference projects (cloned for analysis)
 reference/
 
+# Internal docs (research notes, not for public)
+docs/
+
 # Logs
 *.log
 npm-debug.log*

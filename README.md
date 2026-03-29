@@ -92,7 +92,7 @@ The server **auto-detects** service account credentials from env vars. No extra 
 | `GEMINI_API_KEY` | AI Studio | Yes | API key from Google AI Studio |
 | `GOOGLE_GENAI_USE_VERTEXAI` | Vertex AI | Yes | Set to `"true"` to enable |
 | `GOOGLE_CLOUD_PROJECT` | Vertex AI | Yes | GCP project ID |
-| `GOOGLE_CLOUD_LOCATION` | Vertex AI | No | Region (default: `us-central1`) |
+| `GOOGLE_CLOUD_LOCATION` | Vertex AI | No | Region (default: `global`) |
 | `GOOGLE_CREDENTIALS_JSON` | Vertex AI | No* | Service account JSON content (paste directly) |
 | `GOOGLE_APPLICATION_CREDENTIALS` | Vertex AI | No* | Path to service account JSON key file |
 

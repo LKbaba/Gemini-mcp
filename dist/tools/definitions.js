@@ -3,19 +3,19 @@
  * Tool schemas compliant with MCP protocol
  *
  * v1.3.0 Updates:
- * - 更新默认模型为 gemini-3.1-pro-preview
- * - 保留旧模型名称以支持向后兼容
+ * - Updated default model to gemini-3.1-pro-preview
+ * - Retained old model names for backward compatibility
  */
 import { TOOL_NAMES } from '../config/constants.js';
-// 模型参数定义（大多数工具共享，默认：3.1 Pro）
-// v1.3.0: 添加 gemini-3.1-pro-preview，保留旧模型以支持向后兼容
+// Model parameter definition (shared by most tools, default: 3.1 Pro)
+// v1.3.0: Added gemini-3.1-pro-preview, retained old models for backward compatibility
 const MODEL_PARAMETER = {
     type: 'string',
     enum: ['gemini-3.1-pro-preview', 'gemini-3-pro-preview', 'gemini-3-flash-preview'],
     description: 'Gemini model to use (optional, default: gemini-3.1-pro-preview)'
 };
-// 搜索工具模型参数（默认：Flash，更快的响应速度）
-// v1.3.0: 保持不变，继续使用 Flash
+// Search tool model parameter (default: Flash, faster response)
+// v1.3.0: Unchanged, continues using Flash
 const SEARCH_MODEL_PARAMETER = {
     type: 'string',
     enum: ['gemini-3.1-pro-preview', 'gemini-3-pro-preview', 'gemini-3-flash-preview'],

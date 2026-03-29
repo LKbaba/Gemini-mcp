@@ -60,7 +60,7 @@ When analyzing data:
 - Suggest optimizations
 - Explain relationships`;
 
-// 支持的模型类型（v1.3.0: 迁移到 gemini-3.1-pro-preview）
+// Supported model types (v1.3.0: migrated to gemini-3.1-pro-preview)
 type SupportedModel = 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
 
 // Parameter interface

@@ -44,7 +44,7 @@ Output format:
 - Be concise but comprehensive
 - Use professional terminology`;
 
-// 支持的模型类型（v1.3.0: 迁移到 gemini-3.1-pro-preview）
+// Supported model types (v1.3.0: migrated to gemini-3.1-pro-preview)
 type SupportedModel = 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
 
 export interface MultimodalQueryParams {
@@ -97,7 +97,7 @@ export async function handleMultimodalQuery(
       fullPrompt += `\n\nPlease provide your response as code only, no explanations.`;
     }
 
-    // v1.3.0: 使用用户选择的模型（默认：gemini-3.1-pro-preview）
+    // v1.3.0: Use user-selected model (default: gemini-3.1-pro-preview)
     const modelToUse = params.model || 'gemini-3.1-pro-preview';
     client.setModel(modelToUse);
 
