@@ -10,6 +10,7 @@
 import { createInterface } from 'readline';
 import { SERVER_INFO, MCP_VERSION, ERROR_CODES, TOOL_NAMES } from './config/constants.js';
 import { createGeminiClient } from './utils/gemini-client.js';
+import { detectAuthConfig, createGeminiAI } from './utils/gemini-factory.js';
 import { handleAPIError, handleValidationError, handleInternalError, logError } from './utils/error-handler.js';
 import { TOOL_DEFINITIONS } from './tools/definitions.js';
 // v1.2.0: Streamlined to 5 core tools
@@ -37,6 +38,7 @@ if (process.stdin.setEncoding) {
 }
 // Global state
 let geminiClient = null;
+let geminiAI = null;
 let isInitialized = false;
 /**
  * Send response to stdout
@@ -100,12 +102,18 @@ async function handleToolsCall(request) {
     const { name, arguments: args } = request.params;
     // Initialize Gemini client (if not already)
     if (!geminiClient) {
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            sendError(request.id, ERROR_CODES.API_ERROR, 'GEMINI_API_KEY environment variable is not set');
+        try {
+            const authConfig = detectAuthConfig();
+            geminiClient = createGeminiClient(authConfig);
+            geminiAI = createGeminiAI(authConfig);
+            console.error(`[INFO] Auth mode: ${authConfig.mode}${authConfig.mode === 'vertex-ai'
+                ? ` (project: ${authConfig.project}, location: ${authConfig.location})`
+                : ''}`);
+        }
+        catch (error) {
+            sendError(request.id, ERROR_CODES.API_ERROR, error.message);
             return;
         }
-        geminiClient = createGeminiClient(apiKey);
     }
     try {
         let result;
@@ -124,7 +132,7 @@ async function handleToolsCall(request) {
                 result = await handleBrainstorm(args, geminiClient);
                 break;
             case TOOL_NAMES.SEARCH:
-                result = await handleSearch(args, process.env.GEMINI_API_KEY);
+                result = await handleSearch(args, geminiAI);
                 break;
             default:
                 sendError(request.id, ERROR_CODES.METHOD_NOT_FOUND, `Unknown tool: ${name}`);

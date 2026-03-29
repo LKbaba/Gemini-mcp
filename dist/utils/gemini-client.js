@@ -68,12 +68,12 @@ export class GeminiClient {
     modelId;
     config;
     constructor(config) {
-        // Use factory function for SDK-native retry and timeout (Bug2, Bug6 fix)
-        this.client = createGeminiAI(config.apiKey);
-        // Use getDefaultModel() instead of hardcoded model name (Bug5 fix)
+        // Use factory function for SDK-native retry and timeout
+        this.client = createGeminiAI(config.authConfig);
+        // Use getDefaultModel() instead of hardcoded model name
         this.modelId = config.model || getDefaultModel().id;
         this.config = {
-            apiKey: config.apiKey,
+            authConfig: config.authConfig,
             model: this.modelId,
         };
     }
@@ -165,12 +165,11 @@ export class GeminiClient {
         return this.modelId;
     }
     /**
-     * Get the API key used by this client.
-     * Exposed so tools can use createGeminiAI() with the same key
-     * instead of reading from process.env directly.
+     * Get the underlying GoogleGenAI instance.
+     * Allows tools to call SDK methods directly (e.g., ai.models.generateContent).
      */
-    getApiKey() {
-        return this.config.apiKey;
+    getAI() {
+        return this.client;
     }
     /**
      * Error handling
@@ -191,7 +190,7 @@ export class GeminiClient {
 /**
  * Create Gemini client instance
  */
-export function createGeminiClient(apiKey, model) {
-    return new GeminiClient({ apiKey, model });
+export function createGeminiClient(authConfig, model) {
+    return new GeminiClient({ authConfig, model });
 }
 //# sourceMappingURL=gemini-client.js.map

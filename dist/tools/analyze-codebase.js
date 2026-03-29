@@ -13,7 +13,6 @@ import { validateRequired, validateArray } from '../utils/validators.js';
 import { handleAPIError, handleValidationError, logError } from '../utils/error-handler.js';
 import { readDirectory, readFiles } from '../utils/file-reader.js';
 import { ValidationError, SecurityError } from '../utils/errors.js';
-import { createGeminiAI } from '../utils/gemini-factory.js';
 import { getDefaultModel } from '../config/models.js';
 // Codebase analysis system prompt
 const CODEBASE_ANALYSIS_SYSTEM_PROMPT = `You are a senior software architect with expertise in:
@@ -307,8 +306,8 @@ export async function handleAnalyzeCodebase(params, client) {
         // Determine thinking level (default high for complex analysis)
         const thinkingLevel = params.thinkingLevel || 'high';
         let response;
-        // Use the client's API key with factory function (Bug3 fix: no longer reads from process.env)
-        const ai = createGeminiAI(client.getApiKey());
+        // Use the client's underlying GoogleGenAI instance directly
+        const ai = client.getAI();
         const config = {
             thinkingConfig: { thinkingLevel },
             systemInstruction: CODEBASE_ANALYSIS_SYSTEM_PROMPT,

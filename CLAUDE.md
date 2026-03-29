@@ -1,9 +1,33 @@
+## Project Overview
+- **Name**: mcp-server-gemini (npm: @lkbaba/mcp-server-gemini)
+- **Version**: 1.4.0
+- **Purpose**: MCP server providing 5 Gemini AI tools for Claude Code and other MCP clients
+- **Author**: LKbaba (based on aliargun/mcp-server-gemini v4.2.2)
+
+## Architecture
+- **Auth**: Dual mode — AI Studio API Key (`GEMINI_API_KEY`) or Vertex AI ADC (service account / gcloud)
+- **Auth detection**: `gemini-factory.ts:detectAuthConfig()` with 3-mode priority: explicit Vertex AI → raw JSON paste → API Key
+- **Default Vertex AI location**: `global` (required for Gemini 3.x preview models)
+- **5 Tools**: multimodal_query, analyze_content, analyze_codebase, brainstorm, search
+- **Models**: gemini-3.1-pro-preview (default), gemini-3-flash-preview (search default)
+- **Build**: TypeScript → dist/, run with `node dist/server.js`
+
+## Key Implementation Details
+- Windows MCP clients corrupt `/` → `\` in env vars; `fixWindowsSlashCorruption()` in gemini-factory.ts handles this
+- Service account credentials written to temp file via `setupCredentialsTempFile()` to avoid PEM encoding issues
+- `GeminiClient` wraps GoogleGenAI for 4 tools; `search.ts` receives raw GoogleGenAI instance directly
+
 ## Development Environment
 - OS: Windows 10.0.19045
 - Shell: Git Bash
 - Path format: Windows (use forward slashes in Git Bash)
 - File system: Case-insensitive
 - Line endings: CRLF (configure Git autocrlf)
+
+## Build & Test
+- Build: `npx tsc`
+- Test MCP locally: configure in Claude Code MCP settings with `node` command pointing to `dist/server.js`
+- Publish: `npm publish --access public`
 
 ## Playwright MCP Guide
 

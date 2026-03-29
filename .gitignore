@@ -4,6 +4,14 @@ node_modules/
 # Environment variables
 .env
 
+# Service account keys (NEVER commit these)
+*-credentials.json
+*service-account*.json
+vertex-ai-*.json
+
+# Reference projects (cloned for analysis)
+reference/
+
 # Logs
 *.log
 npm-debug.log*

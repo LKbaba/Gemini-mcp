@@ -6,12 +6,12 @@
 import { GoogleGenAI } from '@google/genai';
 import { getModelConfig, getDefaultModel } from '../config/models.js';
 import { API_CONFIG, ERROR_CODES } from '../config/constants.js';
-import { createGeminiAI } from './gemini-factory.js';
+import { createGeminiAI, AuthConfig } from './gemini-factory.js';
 import * as fs from 'fs';
 import * as path from 'path';
 
 export interface GeminiClientConfig {
-  apiKey: string;
+  authConfig: AuthConfig;
   model?: string;
 }
 
@@ -94,12 +94,12 @@ export class GeminiClient {
   private config: Required<GeminiClientConfig>;
 
   constructor(config: GeminiClientConfig) {
-    // Use factory function for SDK-native retry and timeout (Bug2, Bug6 fix)
-    this.client = createGeminiAI(config.apiKey);
-    // Use getDefaultModel() instead of hardcoded model name (Bug5 fix)
+    // Use factory function for SDK-native retry and timeout
+    this.client = createGeminiAI(config.authConfig);
+    // Use getDefaultModel() instead of hardcoded model name
     this.modelId = config.model || getDefaultModel().id;
     this.config = {
-      apiKey: config.apiKey,
+      authConfig: config.authConfig,
       model: this.modelId,
     };
   }
@@ -204,12 +204,11 @@ export class GeminiClient {
   }
 
   /**
-   * Get the API key used by this client.
-   * Exposed so tools can use createGeminiAI() with the same key
-   * instead of reading from process.env directly.
+   * Get the underlying GoogleGenAI instance.
+   * Allows tools to call SDK methods directly (e.g., ai.models.generateContent).
    */
-  getApiKey(): string {
-    return this.config.apiKey;
+  getAI(): GoogleGenAI {
+    return this.client;
   }
 
   /**
@@ -232,6 +231,6 @@ export class GeminiClient {
 /**
  * Create Gemini client instance
  */
-export function createGeminiClient(apiKey: string, model?: string): GeminiClient {
-  return new GeminiClient({ apiKey, model });
+export function createGeminiClient(authConfig: AuthConfig, model?: string): GeminiClient {
+  return new GeminiClient({ authConfig, model });
 }

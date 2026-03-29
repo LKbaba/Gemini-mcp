@@ -22,7 +22,6 @@ import {
   FileContent
 } from '../utils/file-reader.js';
 import { ValidationError, SecurityError } from '../utils/errors.js';
-import { createGeminiAI } from '../utils/gemini-factory.js';
 import { getDefaultModel } from '../config/models.js';
 
 // Codebase analysis system prompt
@@ -437,8 +436,8 @@ export async function handleAnalyzeCodebase(
 
     let response: string;
 
-    // Use the client's API key with factory function (Bug3 fix: no longer reads from process.env)
-    const ai = createGeminiAI(client.getApiKey());
+    // Use the client's underlying GoogleGenAI instance directly
+    const ai = client.getAI();
 
     const config: any = {
       thinkingConfig: { thinkingLevel },

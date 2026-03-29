@@ -16,17 +16,24 @@ An MCP server that connects Claude Code to Google's Gemini 3.1, unlocking capabi
 
 ## Quick Start
 
-### 1. Get API Key
-
-Visit [Google AI Studio](https://aistudio.google.com/apikey) and create an API key.
-
-### 2. Configure Claude Code
-
 Add to your MCP config file:
 
 - **Mac**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 - **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+Then restart Claude Code.
+
+## Authentication
+
+Two authentication modes are supported. The server auto-detects which mode to use based on environment variables.
+
+### Option 1: AI Studio API Key (Simplest)
+
+Best for personal development and quick trials.
+
+1. Visit [Google AI Studio](https://aistudio.google.com/apikey) and create an API key
+2. Add to your MCP config:
 
 ```json
 {
@@ -35,18 +42,67 @@ Add to your MCP config file:
       "command": "npx",
       "args": ["-y", "@lkbaba/mcp-server-gemini"],
       "env": {
-        "GEMINI_API_KEY": "your_api_key_here"
+        "GEMINI_API_KEY": "your-api-key"
       }
     }
   }
 }
 ```
 
-### 3. Restart Claude Code
+### Option 2: Vertex AI (Recommended for Production)
 
-### Migration Notice (v1.3.0)
+More secure, uses Google Cloud IAM authentication.
 
-If you're upgrading from v1.2.x:
+**Prerequisites:**
+1. A Google Cloud project with Vertex AI API enabled
+2. A service account with **Vertex AI User** role ([create one here](https://console.cloud.google.com/iam-admin/serviceaccounts))
+
+**Setup (2 minutes):**
+1. Create a service account in GCP Console → download JSON key
+2. Open the JSON file → copy its entire content
+3. Paste directly as env in MCP config — **that's it!**
+
+```json
+{
+  "mcpServers": {
+    "gemini": {
+      "command": "npx",
+      "args": ["-y", "@lkbaba/mcp-server-gemini"],
+      "env": {
+        "type": "service_account",
+        "project_id": "your-project-id",
+        "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+        "client_email": "your-sa@your-project.iam.gserviceaccount.com",
+        "...": "... (other fields from the JSON file)"
+      }
+    }
+  }
+}
+```
+
+The server **auto-detects** service account credentials from env vars. No extra configuration needed.
+
+> **Advanced options:** You can also use `GOOGLE_GENAI_USE_VERTEXAI=true` + `GOOGLE_CREDENTIALS_JSON` (stringified JSON), `GOOGLE_APPLICATION_CREDENTIALS` (file path), or `gcloud auth application-default login`.
+
+<details>
+<summary>Environment variables reference</summary>
+
+| Variable | Mode | Required | Description |
+|----------|------|----------|-------------|
+| `GEMINI_API_KEY` | AI Studio | Yes | API key from Google AI Studio |
+| `GOOGLE_GENAI_USE_VERTEXAI` | Vertex AI | Yes | Set to `"true"` to enable |
+| `GOOGLE_CLOUD_PROJECT` | Vertex AI | Yes | GCP project ID |
+| `GOOGLE_CLOUD_LOCATION` | Vertex AI | No | Region (default: `us-central1`) |
+| `GOOGLE_CREDENTIALS_JSON` | Vertex AI | No* | Service account JSON content (paste directly) |
+| `GOOGLE_APPLICATION_CREDENTIALS` | Vertex AI | No* | Path to service account JSON key file |
+
+\* At least one credential source is needed: `GOOGLE_CREDENTIALS_JSON`, `GOOGLE_APPLICATION_CREDENTIALS`, or `gcloud` ADC.
+
+If both `GEMINI_API_KEY` and `GOOGLE_GENAI_USE_VERTEXAI` are set, Vertex AI takes priority.
+</details>
+
+### Migration Notice (v1.3.0+)
+
 - The default model is now `gemini-3.1-pro-preview`
 - Old model names are automatically mapped (no config changes needed)
 - See [CHANGELOG.md](CHANGELOG.md) for details
@@ -172,6 +228,7 @@ src/
 │   ├── brainstorm.ts       # Brainstorming
 │   └── search.ts           # Web search
 ├── utils/
+│   ├── gemini-factory.ts   # Dual-mode auth factory (API Key + Vertex AI)
 │   ├── gemini-client.ts    # Gemini API client
 │   ├── file-reader.ts      # File system access
 │   ├── security.ts         # Path validation

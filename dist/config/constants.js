@@ -6,7 +6,7 @@ export const MCP_VERSION = '2024-11-05';
 // Server information
 export const SERVER_INFO = {
     name: 'mcp-server-gemini',
-    version: '1.3.1',
+    version: '1.4.0',
     description: `Gemini AI MCP Server with 5 core tools.
 IMPORTANT: All tools support PARALLEL execution - call multiple tools simultaneously for better performance.
 Example: analyze multiple files or search multiple queries in parallel.`,

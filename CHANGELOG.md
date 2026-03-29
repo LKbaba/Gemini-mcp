@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-03-29
+
+### Added
+- Vertex AI authentication support via Application Default Credentials (ADC)
+- Dual auth mode: AI Studio API Key + Vertex AI (auto-detected from environment variables)
+- Three Vertex AI credential methods: explicit env vars, raw JSON paste into MCP env, `GOOGLE_CREDENTIALS_JSON` string
+- `detectAuthConfig()` with 3-mode auto-detection: explicit Vertex AI → raw JSON paste → API Key
+- `detectRawServiceAccountEnv()` for zero-config Vertex AI: paste service account JSON directly into MCP env field
+- `fixWindowsSlashCorruption()` to fix Windows MCP clients converting `/` to `\` in env var values, corrupting PEM private keys
+- `setupCredentialsTempFile()` writes credentials to temp file for reliable SDK authentication
+- Auth mode logging on server startup (`[INFO] Auth mode: vertex-ai/api-key`)
+- `getAI()` method on GeminiClient to expose underlying GoogleGenAI instance
+
+### Changed
+- `createGeminiAI()` now accepts `AuthConfig` object instead of raw API key string
+- `handleSearch()` now receives `GoogleGenAI` instance instead of API key (consistent with other tools)
+- `GeminiClient` constructor now accepts `AuthConfig` instead of `apiKey`
+- `analyze-codebase` tool now uses `client.getAI()` instead of `createGeminiAI(client.getApiKey())`
+- Removed `getApiKey()` from GeminiClient (not applicable in Vertex AI mode)
+- Default Vertex AI location changed from `us-central1` to `global` (required for Gemini 3.x preview models)
+
+### Fixed
+- Windows env var corruption: MCP clients on Windows convert forward slashes to backslashes in env values, breaking PEM private key base64 and URL fields
+
+### Environment Variables (Vertex AI mode)
+- `GOOGLE_GENAI_USE_VERTEXAI=true` — Enable Vertex AI mode (explicit)
+- `GOOGLE_CLOUD_PROJECT` — GCP project ID (required for explicit mode, auto-detected from JSON paste)
+- `GOOGLE_CLOUD_LOCATION` — Region, defaults to `global` (optional)
+- `GOOGLE_CREDENTIALS_JSON` — Inline service account JSON content (optional)
+- `GOOGLE_APPLICATION_CREDENTIALS` — Service account JSON file path (optional)
+- Or paste raw service account JSON fields directly into MCP env (auto-detected)
+
+---
+
 ## [1.3.1] - 2026-03-23
 
 ### Fixed

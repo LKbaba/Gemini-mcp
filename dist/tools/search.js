@@ -4,7 +4,6 @@
  */
 import { validateRequired, validateString } from '../utils/validators.js';
 import { handleAPIError, handleValidationError, logError } from '../utils/error-handler.js';
-import { createGeminiAI } from '../utils/gemini-factory.js';
 import { ValidationError, SecurityError } from '../utils/errors.js';
 // Search system prompt
 const SEARCH_SYSTEM_PROMPT = `You are a helpful research assistant with access to Google Search.
@@ -17,7 +16,7 @@ When answering questions:
 /**
  * Handle gemini_search tool invocation
  */
-export async function handleSearch(params, apiKey) {
+export async function handleSearch(params, ai) {
     try {
         // Parameter validation
         validateRequired(params.query, 'query');
@@ -27,8 +26,6 @@ export async function handleSearch(params, apiKey) {
         }
         const thinkingLevel = params.thinkingLevel || 'high';
         const outputFormat = params.outputFormat || 'text';
-        // Create AI client with built-in retry and timeout
-        const ai = createGeminiAI(apiKey);
         // Configure tools with Google Search
         const tools = [{ googleSearch: {} }];
         const config = {
