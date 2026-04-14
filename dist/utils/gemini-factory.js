@@ -63,6 +63,13 @@ export function createGeminiAI(config) {
         if (config.credentials) {
             setupCredentialsTempFile(config.credentials);
         }
+        // Remove conflicting API key env vars before SDK initialization.
+        // Known @google/genai SDK bug (#616): if GEMINI_API_KEY or GOOGLE_API_KEY
+        // exist in process.env alongside vertexai:true, the SDK takes the wrong
+        // auth path and throws an unhandled promise rejection, crashing Node.js.
+        // Safe to delete here — we're in Vertex AI mode and don't need these keys.
+        delete process.env.GEMINI_API_KEY;
+        delete process.env.GOOGLE_API_KEY;
         return new GoogleGenAI({
             vertexai: true,
             project: config.project,

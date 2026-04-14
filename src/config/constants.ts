@@ -8,7 +8,7 @@ export const MCP_VERSION = '2024-11-05';
 // Server information
 export const SERVER_INFO = {
   name: 'mcp-server-gemini',
-  version: '1.4.1',
+  version: '1.5.0',
   description: `Gemini AI MCP Server with 5 core tools.
 IMPORTANT: All tools support PARALLEL execution - call multiple tools simultaneously for better performance.
 Example: analyze multiple files or search multiple queries in parallel.`,
@@ -18,7 +18,7 @@ Example: analyze multiple files or search multiple queries in parallel.`,
 
 // API configuration
 export const API_CONFIG = {
-  timeout: 60000, // 60 seconds
+  timeout: 120000, // 120 seconds — Vertex AI + Pro models need more time
   maxRetries: 3,
   retryDelay: 1000, // 1 second
   maxImageSize: 10 * 1024 * 1024, // 10MB

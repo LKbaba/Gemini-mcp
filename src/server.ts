@@ -254,6 +254,13 @@ function main(): void {
   console.error('Waiting for requests...');
   console.error('');
 
+  // Prevent silent crashes from unhandled promise rejections.
+  // Without this, any unhandled rejection terminates the process and
+  // the MCP client only sees "Connection closed" with no error details.
+  process.on('unhandledRejection', (reason) => {
+    console.error('[FATAL] Unhandled rejection — server will exit:', reason);
+  });
+
   // Read stdin line by line
   const rl = createInterface({
     input: process.stdin,
