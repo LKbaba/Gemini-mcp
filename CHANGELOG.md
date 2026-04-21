@@ -5,7 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.0.0] - 2026-04-20
+## [2.0.0] - 2026-04-21
+
+> Published to npm on 2026-04-21 as `@lkbaba/mcp-server-gemini@2.0.0` (tag: `latest`).
 
 ### Changed (BREAKING — protocol layer rewrite)
 - Protocol layer fully migrated to the official `@modelcontextprotocol/sdk` (`^1.29.0`)
@@ -29,10 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - MCP clients that previously worked with v1 continue to work with v2 unchanged
 - Clients that dropped the connection because of the notification bug (observed with certain VS Code plugins using strict MCP validators) now connect successfully
 
-## [1.5.1] - 2026-04-19
+## [1.5.1] - 2026-04-21
+
+> Published to npm on 2026-04-21 as `@lkbaba/mcp-server-gemini@1.5.1` (historical stable release for v1 users who cannot upgrade to v2).
 
 ### Fixed
-- Stopped responding to `notifications/initialized` (hotfix on the hand-written protocol path; v2.0 obsoletes this by design).
+- **JSON-RPC spec violation on `notifications/initialized`**: The hand-written protocol path in v1 replied to the initialized notification with an error response, which is illegal per JSON-RPC 2.0 (notifications must not be answered). Strict MCP clients (recent Claude CLI, some VS Code extensions) treated the orphan response as a server fault and dropped the connection with `MCP error -32000: Connection closed` or silently omitted the Gemini tools from the tool list.
+- Fix: 14-line guard at the top of `handleRequest` that silently drops any message without an `id`. Covers `notifications/initialized` today and any future MCP notification by design.
+- v2.0.0 obsoletes this hotfix by migrating the protocol layer to the official SDK, which handles notifications correctly by design.
 
 ## [1.4.0] - 2026-03-29
 
