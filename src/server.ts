@@ -1,33 +1,47 @@
 #!/usr/bin/env node
 /**
  * mcp-server-gemini-lkbaba
- * Main server file
+ * Main server file — v2.0 SDK-based implementation
  *
- * Specialized MCP server for Gemini 3.0 Pro focused on UI generation and frontend development
- * Based on: aliargun/mcp-server-gemini v4.2.2
+ * Specialized MCP server for Gemini 3.x Pro focused on UI generation and
+ * frontend development. Protocol layer is now fully managed by the official
+ * @modelcontextprotocol/sdk instead of hand-written JSON-RPC routing.
+ *
+ * Based on: aliargun/mcp-server-gemini (historical inspiration)
  * Author: LKbaba
  */
 
-import { createInterface } from 'readline';
-import { MCPRequest, MCPResponse, InitializeResult } from './types.js';
-import { SERVER_INFO, MCP_VERSION, ERROR_CODES, TOOL_NAMES } from './config/constants.js';
-import { createGeminiClient, GeminiClient } from './utils/gemini-client.js';
-import { detectAuthConfig, createGeminiAI } from './utils/gemini-factory.js';
-import { GoogleGenAI } from '@google/genai';
-import { handleAPIError, handleValidationError, handleInternalError, logError } from './utils/error-handler.js';
-import { TOOL_DEFINITIONS } from './tools/definitions.js';
-// v1.2.0: Streamlined to 5 core tools
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
-  handleMultimodalQuery,
-  handleAnalyzeContent,
-  handleAnalyzeCodebase,
-  handleBrainstorm,
-  handleSearch
-} from './tools/index.js';
+  ListToolsRequestSchema,
+  CallToolRequestSchema,
+  McpError,
+  ErrorCode,
+} from '@modelcontextprotocol/sdk/types.js';
+import { GoogleGenAI } from '@google/genai';
+import { SERVER_INFO, TOOL_NAMES } from './config/constants.js';
+import { TOOL_DEFINITIONS } from './tools/definitions.js';
+import { handleSearch, SearchParams } from './tools/search.js';
+import { handleMultimodalQuery, MultimodalQueryParams } from './tools/multimodal-query.js';
+import { handleAnalyzeContent, AnalyzeContentParams } from './tools/analyze-content.js';
+import { handleAnalyzeCodebase, AnalyzeCodebaseParams } from './tools/analyze-codebase.js';
+import { handleBrainstorm, BrainstormParams } from './tools/brainstorm.js';
+import { GeminiClient, createGeminiClient } from './utils/gemini-client.js';
+import { createGeminiAI, detectAuthConfig, AuthConfig } from './utils/gemini-factory.js';
+import { ValidationError, SecurityError } from './utils/errors.js';
 
-// Setup proxy for Node.js fetch (required for users behind proxy/VPN)
+// Proxy setup — must run before any HTTP client is instantiated.
+// Many users sit behind corporate proxies / VPNs (HTTPS_PROXY env var);
+// without installing a dispatcher the Google GenAI SDK fetch calls silently
+// fail with network-level errors that surface as "Connection closed" to the
+// MCP client.
 async function setupProxy(): Promise<void> {
-  const proxyUrl = process.env.HTTP_PROXY || process.env.HTTPS_PROXY || process.env.http_proxy || process.env.https_proxy;
+  const proxyUrl =
+    process.env.HTTP_PROXY ||
+    process.env.HTTPS_PROXY ||
+    process.env.http_proxy ||
+    process.env.https_proxy;
 
   if (proxyUrl) {
     try {
@@ -35,293 +49,176 @@ async function setupProxy(): Promise<void> {
       const dispatcher = new ProxyAgent(proxyUrl);
       setGlobalDispatcher(dispatcher);
       console.error(`🌐 Proxy configured: ${proxyUrl}`);
-    } catch (error) {
+    } catch {
       console.error('⚠️  Failed to configure proxy. If you need proxy support, run: npm install undici');
     }
   }
 }
 
-// Initialize proxy before anything else
-await setupProxy();
-
-// Increase stdin buffer size (for large images)
-if (process.stdin.setEncoding) {
-  process.stdin.setEncoding('utf8');
-}
-
-// Global state
-let geminiClient: GeminiClient | null = null;
+// Lazy Gemini clients — constructed on the first tools/call so that server
+// startup never blocks on auth detection. Auth errors only surface when a
+// tool is actually invoked, matching v1 behavior. Two flavours are exposed
+// because search uses the raw GoogleGenAI SDK (needs googleSearch tool config)
+// while the other four tools share a higher-level GeminiClient wrapper.
+let cachedAuthConfig: AuthConfig | null = null;
 let geminiAI: GoogleGenAI | null = null;
-let isInitialized = false;
+let geminiClient: GeminiClient | null = null;
 
-/**
- * Send response to stdout
- */
-function sendResponse(response: MCPResponse): void {
-  console.log(JSON.stringify(response));
-}
-
-/**
- * Send error response
- */
-function sendError(id: string | number, code: number, message: string, data?: any): void {
-  sendResponse({
-    jsonrpc: '2.0',
-    id,
-    error: { code, message, data }
-  });
-}
-
-/**
- * Handle initialize request
- */
-function handleInitialize(request: MCPRequest): void {
-  const result: InitializeResult = {
-    protocolVersion: MCP_VERSION,
-    serverInfo: {
-      name: SERVER_INFO.name,
-      version: SERVER_INFO.version
-    },
-    capabilities: {
-      tools: {
-        listChanged: false
-      }
-    }
-  };
-
-  sendResponse({
-    jsonrpc: '2.0',
-    id: request.id,
-    result
-  });
-
-  isInitialized = true;
-}
-
-/**
- * Handle tools/list request
- */
-function handleToolsList(request: MCPRequest): void {
-  sendResponse({
-    jsonrpc: '2.0',
-    id: request.id,
-    result: {
-      tools: TOOL_DEFINITIONS
-    }
-  });
-}
-
-/**
- * Handle tools/call request
- */
-async function handleToolsCall(request: MCPRequest): Promise<void> {
-  if (!isInitialized) {
-    sendError(request.id, ERROR_CODES.INTERNAL_ERROR, 'Server not initialized');
-    return;
+function getAuthConfig(): AuthConfig {
+  if (!cachedAuthConfig) {
+    cachedAuthConfig = detectAuthConfig();
+    console.error(`[INFO] Auth mode: ${cachedAuthConfig.mode}`);
   }
+  return cachedAuthConfig;
+}
 
-  const { name, arguments: args } = request.params;
+function getGeminiAI(): GoogleGenAI {
+  if (!geminiAI) {
+    geminiAI = createGeminiAI(getAuthConfig());
+  }
+  return geminiAI;
+}
 
-  // Initialize Gemini client (if not already)
+function getGeminiClient(): GeminiClient {
   if (!geminiClient) {
-    try {
-      const authConfig = detectAuthConfig();
-      geminiClient = createGeminiClient(authConfig);
-      geminiAI = createGeminiAI(authConfig);
-      console.error(`[INFO] Auth mode: ${authConfig.mode}${
-        authConfig.mode === 'vertex-ai'
-          ? ` (project: ${authConfig.project}, location: ${authConfig.location})`
-          : ''
-      }`);
-    } catch (error: any) {
-      sendError(request.id, ERROR_CODES.API_ERROR, error.message);
-      return;
-    }
+    geminiClient = createGeminiClient(getAuthConfig());
   }
-
-  try {
-    let result: any;
-
-    // Route to corresponding tool handler (v1.2.0: 5 core tools)
-    switch (name) {
-      case TOOL_NAMES.MULTIMODAL_QUERY:
-        result = await handleMultimodalQuery(args, geminiClient);
-        break;
-
-      case TOOL_NAMES.ANALYZE_CONTENT:
-        result = await handleAnalyzeContent(args, geminiClient);
-        break;
-
-      case TOOL_NAMES.ANALYZE_CODEBASE:
-        result = await handleAnalyzeCodebase(args, geminiClient);
-        break;
-
-      case TOOL_NAMES.BRAINSTORM:
-        result = await handleBrainstorm(args, geminiClient);
-        break;
-
-      case TOOL_NAMES.SEARCH:
-        result = await handleSearch(args, geminiAI!);
-        break;
-
-      default:
-        sendError(
-          request.id,
-          ERROR_CODES.METHOD_NOT_FOUND,
-          `Unknown tool: ${name}`
-        );
-        return;
-    }
-
-    // Send success response
-    sendResponse({
-      jsonrpc: '2.0',
-      id: request.id,
-      result: {
-        content: [
-          {
-            type: 'text',
-            text: typeof result === 'string' ? result : JSON.stringify(result, null, 2)
-          }
-        ]
-      }
-    });
-  } catch (error: any) {
-    logError(`Tool: ${name}`, error);
-
-    // Return appropriate error based on error type
-    if (error.message?.includes('not yet implemented')) {
-      sendError(request.id, ERROR_CODES.INTERNAL_ERROR, error.message);
-    } else if (error.message?.includes('required') || error.message?.includes('must be')) {
-      const validationError = handleValidationError(error.message);
-      sendError(request.id, validationError.code, validationError.message, validationError.data);
-    } else {
-      const apiError = handleAPIError(error);
-      sendError(request.id, apiError.code, apiError.message, apiError.data);
-    }
-  }
+  return geminiClient;
 }
 
-/**
- * Handle request or notification.
- *
- * JSON-RPC 2.0 distinguishes a request (has `id`) from a notification (no `id`).
- * A server MUST NOT send any response to a notification — including errors.
- * Violating this confuses MCP clients such as Claude CLI, which rely on strict
- * id-matching and treat stray responses as protocol errors (observed symptoms:
- * tools silently dropped from the session, or subsequent tools/call returning
- * "Connection closed").
- */
-async function handleRequest(request: MCPRequest): Promise<void> {
-  // A missing `id` means this is a notification. Handle known ones
-  // silently and drop unknown ones without replying.
-  const isNotification = request.id === undefined || request.id === null;
+// Prevent silent crashes from unhandled promise rejections. Without this,
+// any unhandled rejection terminates the process and the MCP client only
+// sees "Connection closed" with no error details.
+process.on('unhandledRejection', (reason) => {
+  console.error('[FATAL] Unhandled rejection — server will exit:', reason);
+});
 
-  if (isNotification) {
-    // `notifications/initialized` is the standard client-side signal that the
-    // initialization phase is complete. We don't need any per-client state, so
-    // just acknowledge internally and stay silent on the wire.
-    if (request.method === 'notifications/initialized') {
-      return;
-    }
-    // Any other unknown notification: ignore, do not reply.
-    return;
-  }
+// Graceful shutdown on OS signals. The stdio transport also handles stdin
+// close via the SDK, but we keep these for parity with v1 and to surface
+// a clear log line when the user Ctrl-C's a manual test run.
+process.on('SIGINT', () => {
+  console.error('\nShutting down (SIGINT)...');
+  process.exit(0);
+});
+process.on('SIGTERM', () => {
+  console.error('\nShutting down (SIGTERM)...');
+  process.exit(0);
+});
 
-  try {
-    switch (request.method) {
-      case 'initialize':
-        handleInitialize(request);
-        break;
-
-      case 'tools/list':
-        handleToolsList(request);
-        break;
-
-      case 'tools/call':
-        await handleToolsCall(request);
-        break;
-
-      case 'ping':
-        sendResponse({
-          jsonrpc: '2.0',
-          id: request.id,
-          result: { status: 'ok' }
-        });
-        break;
-
-      default:
-        sendError(
-          request.id,
-          ERROR_CODES.METHOD_NOT_FOUND,
-          `Method not found: ${request.method}`
-        );
-    }
-  } catch (error: any) {
-    logError('Request handler', error);
-    const internalError = handleInternalError(error);
-    sendError(request.id, internalError.code, internalError.message, internalError.data);
-  }
-}
-
-/**
- * Main function
- */
-function main(): void {
+async function main(): Promise<void> {
+  // Startup banner — goes to stderr so it never pollutes the stdio JSON-RPC
+  // channel. Matches v1 output roughly so log scrapers keep working.
   console.error(`🚀 ${SERVER_INFO.name} v${SERVER_INFO.version}`);
   console.error(`📋 Based on: ${SERVER_INFO.basedOn}`);
   console.error(`🎨 Specialized for UI generation and frontend development`);
-  console.error(`⚡ Powered by Gemini 3.0 Pro`);
-  console.error('');
-  console.error('Waiting for requests...');
+  console.error(`⚡ Powered by Gemini 3.x Pro`);
   console.error('');
 
-  // Prevent silent crashes from unhandled promise rejections.
-  // Without this, any unhandled rejection terminates the process and
-  // the MCP client only sees "Connection closed" with no error details.
-  process.on('unhandledRejection', (reason) => {
-    console.error('[FATAL] Unhandled rejection — server will exit:', reason);
-  });
+  await setupProxy();
 
-  // Read stdin line by line
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    terminal: false
-  });
+  const server = new Server(
+    {
+      name: SERVER_INFO.name,
+      version: SERVER_INFO.version,
+    },
+    {
+      capabilities: {
+        tools: {},
+      },
+    }
+  );
 
-  rl.on('line', async (line) => {
-    if (!line.trim()) return;
+  // tools/list — all five tools are migrated.
+  server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: TOOL_DEFINITIONS,
+  }));
+
+  // tools/call — route to the per-tool handler. Errors are mapped to the
+  // SDK's McpError taxonomy so the client receives structured JSON-RPC
+  // errors instead of a dropped connection.
+  server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const { name, arguments: args } = request.params;
 
     try {
-      const request: MCPRequest = JSON.parse(line);
-      await handleRequest(request);
-    } catch (error) {
-      console.error('Failed to parse request:', error);
-      sendError(
-        'unknown',
-        ERROR_CODES.PARSE_ERROR,
-        'Invalid JSON-RPC request'
-      );
+      switch (name) {
+        case TOOL_NAMES.SEARCH: {
+          const result = await handleSearch(args as unknown as SearchParams, getGeminiAI());
+          return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          };
+        }
+
+        case TOOL_NAMES.MULTIMODAL_QUERY: {
+          const result = await handleMultimodalQuery(
+            args as unknown as MultimodalQueryParams,
+            getGeminiClient()
+          );
+          return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          };
+        }
+
+        case TOOL_NAMES.ANALYZE_CONTENT: {
+          const result = await handleAnalyzeContent(
+            args as unknown as AnalyzeContentParams,
+            getGeminiClient()
+          );
+          return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          };
+        }
+
+        case TOOL_NAMES.ANALYZE_CODEBASE: {
+          const result = await handleAnalyzeCodebase(
+            args as unknown as AnalyzeCodebaseParams,
+            getGeminiClient()
+          );
+          return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          };
+        }
+
+        case TOOL_NAMES.BRAINSTORM: {
+          const result = await handleBrainstorm(
+            args as unknown as BrainstormParams,
+            getGeminiClient()
+          );
+          return {
+            content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
+          };
+        }
+
+        default:
+          throw new McpError(
+            ErrorCode.MethodNotFound,
+            `Unknown tool: ${name}`
+          );
+      }
+    } catch (error: any) {
+      // Re-raise SDK errors as-is — they already carry the right code.
+      if (error instanceof McpError) {
+        throw error;
+      }
+      // Validation / security failures → InvalidParams so the client can
+      // correct the input rather than treating it as a server fault.
+      if (error instanceof ValidationError || error instanceof SecurityError) {
+        throw new McpError(ErrorCode.InvalidParams, error.message);
+      }
+      // Everything else is a backend / transport failure.
+      const message = error?.message || String(error);
+      console.error(`[ERROR] Tool "${name}" failed:`, message);
+      throw new McpError(ErrorCode.InternalError, message);
     }
   });
 
-  rl.on('close', () => {
-    console.error('Connection closed');
-    process.exit(0);
-  });
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
 
-  // Handle process signals
-  process.on('SIGINT', () => {
-    console.error('\nShutting down...');
-    process.exit(0);
-  });
-
-  process.on('SIGTERM', () => {
-    console.error('\nShutting down...');
-    process.exit(0);
-  });
+  console.error('✅ MCP server connected (stdio transport), waiting for requests...');
+  console.error('');
 }
 
-// Start server
-main();
+main().catch((err) => {
+  console.error('[FATAL] Server failed to start:', err);
+  process.exit(1);
+});
