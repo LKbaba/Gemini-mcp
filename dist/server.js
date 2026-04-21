@@ -169,9 +169,29 @@ async function handleToolsCall(request) {
     }
 }
 /**
- * Handle request
+ * Handle request or notification.
+ *
+ * JSON-RPC 2.0 distinguishes a request (has `id`) from a notification (no `id`).
+ * A server MUST NOT send any response to a notification — including errors.
+ * Violating this confuses MCP clients such as Claude CLI, which rely on strict
+ * id-matching and treat stray responses as protocol errors (observed symptoms:
+ * tools silently dropped from the session, or subsequent tools/call returning
+ * "Connection closed").
  */
 async function handleRequest(request) {
+    // A missing `id` means this is a notification. Handle known ones
+    // silently and drop unknown ones without replying.
+    const isNotification = request.id === undefined || request.id === null;
+    if (isNotification) {
+        // `notifications/initialized` is the standard client-side signal that the
+        // initialization phase is complete. We don't need any per-client state, so
+        // just acknowledge internally and stay silent on the wire.
+        if (request.method === 'notifications/initialized') {
+            return;
+        }
+        // Any other unknown notification: ignore, do not reply.
+        return;
+    }
     try {
         switch (request.method) {
             case 'initialize':

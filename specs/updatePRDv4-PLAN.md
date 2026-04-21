@@ -17,7 +17,7 @@
 | 4 | 版本号更新至 1.5.0 | `src/config/constants.ts` | Chore | [x] |
 | 5 | 构建验证 | `dist/` | Build | [x] |
 | 6 | Git 提交 | — | Chore | [x] |
-| 7 | 发布至 npm | npm | Release | [ ] |
+| 7 | 发布至 npm | npm | Release | [x] |
 
 ---
 
