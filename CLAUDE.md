@@ -1,10 +1,11 @@
 ## Project Overview
 - **Name**: mcp-server-gemini (npm: @lkbaba/mcp-server-gemini)
-- **Version**: 1.4.0
+- **Version**: 2.0.0
 - **Purpose**: MCP server providing 5 Gemini AI tools for Claude Code and other MCP clients
 - **Author**: LKbaba (based on aliargun/mcp-server-gemini v4.2.2)
 
 ## Architecture
+- **Protocol layer**: `@modelcontextprotocol/sdk` v1.29+ (v2.0 migration; v1.x used hand-written JSON-RPC)
 - **Auth**: Dual mode — AI Studio API Key (`GEMINI_API_KEY`) or Vertex AI ADC (service account / gcloud)
 - **Auth detection**: `gemini-factory.ts:detectAuthConfig()` with 3-mode priority: explicit Vertex AI → raw JSON paste → API Key
 - **Default Vertex AI location**: `global` (required for Gemini 3.x preview models)
@@ -13,9 +14,13 @@
 - **Build**: TypeScript → dist/, run with `node dist/server.js`
 
 ## Key Implementation Details
+- `server.ts` uses `Server` + `StdioServerTransport` + `setRequestHandler(ListToolsRequestSchema | CallToolRequestSchema)`; notifications are handled silently by the SDK (fixes the v1 `notifications/initialized` spec violation that caused `Connection closed` in strict MCP clients)
+- Gemini clients are lazy-initialized on first `tools/call` — auth errors surface at call time, not at startup
+- Tool errors are mapped to SDK `McpError` with `ErrorCode.InvalidParams` / `InternalError` / `MethodNotFound`
 - Windows MCP clients corrupt `/` → `\` in env vars; `fixWindowsSlashCorruption()` in gemini-factory.ts handles this
 - Service account credentials written to temp file via `setupCredentialsTempFile()` to avoid PEM encoding issues
 - `GeminiClient` wraps GoogleGenAI for 4 tools; `search.ts` receives raw GoogleGenAI instance directly
+- Tool input schemas in `tools/definitions.ts` are still hand-written JSON Schema (SDK accepts both; Zod migration deferred)
 
 ## Development Environment
 - OS: Windows 10.0.19045

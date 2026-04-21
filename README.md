@@ -120,8 +120,11 @@ Just paste the service account JSON fields directly into `env`. No extra variabl
 If both modes are configured, Vertex AI takes priority.
 </details>
 
-### Migration Notice (v1.3.0+)
+### Migration Notice
 
+**v2.0.0 (2026-04):** The protocol layer has been rewritten on top of the official [`@modelcontextprotocol/sdk`](https://github.com/modelcontextprotocol/typescript-sdk). This fixes a JSON-RPC `notifications/initialized` spec violation inherited from the upstream fork, which caused strict MCP clients (recent Claude CLI, some VS Code extensions) to drop the connection with `MCP error -32000: Connection closed` or to silently omit the Gemini tools from the tool list. No user-facing API changes — upgrade is drop-in.
+
+**v1.3.0+:**
 - The default model is now `gemini-3.1-pro-preview`
 - Old model names are automatically mapped (no config changes needed)
 - See [CHANGELOG.md](CHANGELOG.md) for details
