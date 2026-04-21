@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-20
+
+### Changed (BREAKING — protocol layer rewrite)
+- Protocol layer fully migrated to the official `@modelcontextprotocol/sdk` (`^1.29.0`)
+- Hand-written JSON-RPC routing removed: no more `readline` loop, `handleRequest`, `handleInitialize`, `handleToolsList`, `handleToolsCall`, `sendResponse`, `sendError`
+- `server.ts` now uses `Server` + `StdioServerTransport` + `setRequestHandler(ListToolsRequestSchema | CallToolRequestSchema)` from the SDK
+- Tool errors are now mapped to SDK `McpError` with proper `ErrorCode.InvalidParams` / `InternalError` / `MethodNotFound` codes
+
+### Fixed
+- **JSON-RPC spec violation on `notifications/initialized`**: v1 responded to the notification with a JSON-RPC response object, which violates the spec (notifications must not be answered). Strict MCP clients treated the stray response as an orphaned message and dropped the connection. The SDK handles notifications correctly by design, so this class of bug is now impossible.
+
+### Removed
+- `MCPRequest`, `MCPResponse`, `NotificationMessage`, `GenerateRequest/Response`, `StreamRequest/Response`, `CancelRequest`, `ConfigureRequest`, `InitializeResult`, `ShutdownRequest`, `ExitNotification` and other v1 protocol types from `src/types.ts` (the SDK owns these now). Only `MCPError` remains — used internally by `error-handler.ts` before re-wrapping to SDK `McpError` at the handler boundary.
+
+### Added
+- `@modelcontextprotocol/sdk` `^1.29.0` as a direct dependency
+- `zod` `^4.3.6` as a direct dependency (future-proofing for per-tool Zod schemas)
+- Lazy Gemini client initialization in `server.ts` — auth errors surface on first `tools/call` instead of at process startup
+
+### Migration Notes
+- No user-facing behavior changes: the five tools (`gemini_search`, `gemini_multimodal_query`, `gemini_analyze_content`, `gemini_analyze_codebase`, `gemini_brainstorm`) accept the same parameters and return the same structured JSON as v1.5.1
+- MCP clients that previously worked with v1 continue to work with v2 unchanged
+- Clients that dropped the connection because of the notification bug (observed with certain VS Code plugins using strict MCP validators) now connect successfully
+
+## [1.5.1] - 2026-04-19
+
+### Fixed
+- Stopped responding to `notifications/initialized` (hotfix on the hand-written protocol path; v2.0 obsoletes this by design).
+
 ## [1.4.0] - 2026-03-29
 
 ### Added

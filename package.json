@@ -1,6 +1,6 @@
 {
   "name": "@lkbaba/mcp-server-gemini",
-  "version": "1.5.1",
+  "version": "2.0.0",
   "description": "MCP server for Gemini 3.1 Pro focused on UI generation and frontend development",
   "main": "dist/server.js",
   "bin": {
@@ -19,9 +19,11 @@
   "type": "module",
   "dependencies": {
     "@google/genai": "^1.46.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "fast-glob": "^3.3.3",
     "micromatch": "^4.0.8",
-    "undici": "^7.16.0"
+    "undici": "^7.16.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/jest": "^29.5.0",

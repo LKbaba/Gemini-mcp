@@ -8,12 +8,12 @@ export const MCP_VERSION = '2024-11-05';
 // Server information
 export const SERVER_INFO = {
   name: 'mcp-server-gemini',
-  version: '1.5.1',
-  description: `Gemini AI MCP Server with 5 core tools.
+  version: '2.0.0',
+  description: `Gemini AI MCP Server with 5 core tools. Protocol layer powered by the official @modelcontextprotocol/sdk.
 IMPORTANT: All tools support PARALLEL execution - call multiple tools simultaneously for better performance.
 Example: analyze multiple files or search multiple queries in parallel.`,
   author: 'LKbaba',
-  basedOn: 'aliargun/mcp-server-gemini v4.2.2'
+  basedOn: '@modelcontextprotocol/sdk (official TypeScript SDK)'
 };
 
 // API configuration
