@@ -41,9 +41,9 @@ export async function handleSearch(params, ai) {
         if (params.context) {
             prompt = `Context: ${params.context}\n\nQuestion: ${params.query}`;
         }
-        // v1.2.0: Use user-selected model
-        // Default to Flash for search - faster response with comparable quality
-        const model = params.model || 'gemini-3-flash-preview';
+        // v2.1.0: Use user-selected model
+        // Default to GA Flash for search - faster response with comparable quality
+        const model = params.model || 'gemini-3.5-flash';
         const contents = [
             {
                 role: 'user',

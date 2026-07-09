@@ -10,19 +10,19 @@
 import { TOOL_NAMES } from '../config/constants.js';
 
 // Model parameter definition (shared by most tools, default: 3.1 Pro)
-// v1.3.0: Added gemini-3.1-pro-preview, retained old models for backward compatibility
+// v2.1.0: Added gemini-3.5-flash (GA); old models retained for backward compat (auto-mapped)
 const MODEL_PARAMETER = {
   type: 'string',
-  enum: ['gemini-3.1-pro-preview', 'gemini-3-pro-preview', 'gemini-3-flash-preview'],
+  enum: ['gemini-3.1-pro-preview', 'gemini-3.5-flash', 'gemini-3-pro-preview', 'gemini-3-flash-preview'],
   description: 'Gemini model to use (optional, default: gemini-3.1-pro-preview)'
 };
 
 // Search tool model parameter (default: Flash, faster response)
-// v1.3.0: Unchanged, continues using Flash
+// v2.1.0: default upgraded to gemini-3.5-flash (GA)
 const SEARCH_MODEL_PARAMETER = {
   type: 'string',
-  enum: ['gemini-3.1-pro-preview', 'gemini-3-pro-preview', 'gemini-3-flash-preview'],
-  description: 'Gemini model to use (optional, default: gemini-3-flash-preview for faster search)'
+  enum: ['gemini-3.1-pro-preview', 'gemini-3.5-flash', 'gemini-3-pro-preview', 'gemini-3-flash-preview'],
+  description: 'Gemini model to use (optional, default: gemini-3.5-flash for faster search)'
 };
 
 /**

@@ -10,7 +10,7 @@
 - **Auth detection**: `gemini-factory.ts:detectAuthConfig()` with 3-mode priority: explicit Vertex AI → raw JSON paste → API Key
 - **Default Vertex AI location**: `global` (required for Gemini 3.x preview models)
 - **5 Tools**: multimodal_query, analyze_content, analyze_codebase, brainstorm, search
-- **Models**: gemini-3.1-pro-preview (default), gemini-3-flash-preview (search default)
+- **Models**: gemini-3.1-pro-preview (default), gemini-3.5-flash (search default, GA)
 - **Build**: TypeScript → dist/, run with `node dist/server.js`
 
 ## Key Implementation Details

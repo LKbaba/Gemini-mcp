@@ -20,8 +20,8 @@ When answering questions:
 4. If search results are insufficient, acknowledge limitations
 5. Synthesize information from multiple sources when relevant`;
 
-// Supported model types
-type SupportedModel = 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
+// Supported model types (v2.1.0: default upgraded to gemini-3.5-flash GA)
+type SupportedModel = 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
 
 // Parameter interface
 export interface SearchParams {
@@ -88,9 +88,9 @@ export async function handleSearch(
       prompt = `Context: ${params.context}\n\nQuestion: ${params.query}`;
     }
 
-    // v1.2.0: Use user-selected model
-    // Default to Flash for search - faster response with comparable quality
-    const model = params.model || 'gemini-3-flash-preview';
+    // v2.1.0: Use user-selected model
+    // Default to GA Flash for search - faster response with comparable quality
+    const model = params.model || 'gemini-3.5-flash';
     const contents = [
       {
         role: 'user',

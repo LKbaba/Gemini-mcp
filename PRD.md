@@ -1,4 +1,4 @@
-# Gemini MCP Server — Product Specification v1.4.0
+# Gemini MCP Server — Product Specification v2.1.0
 
 ## Product Information
 
@@ -6,12 +6,12 @@
 |-------|---------|
 | **Product Name** | mcp-server-gemini |
 | **npm Package** | `@lkbaba/mcp-server-gemini` |
-| **Current Version** | v1.4.0 |
+| **Current Version** | v2.1.0 |
 | **Author** | LKbaba |
 | **Based On** | aliargun/mcp-server-gemini v4.2.2 |
 | **License** | MIT |
 | **Repository** | https://github.com/LKbaba/Gemini-mcp |
-| **Last Updated** | 2026-03-29 |
+| **Last Updated** | 2026-07-09 |
 
 ---
 
@@ -38,7 +38,7 @@ mcp-server-gemini is a dedicated MCP (Model Context Protocol) server that expose
 | `gemini_analyze_content` | Code / document / data content analysis | gemini-3.1-pro-preview |
 | `gemini_analyze_codebase` | Full codebase analysis (1M-token context) | gemini-3.1-pro-preview |
 | `gemini_brainstorm` | Creative brainstorming with pros, cons, and feasibility | gemini-3.1-pro-preview |
-| `gemini_search` | Real-time web search with Google Search grounding | gemini-3-flash-preview |
+| `gemini_search` | Real-time web search with Google Search grounding | gemini-3.5-flash |
 
 All tools support parallel invocation.
 
@@ -56,7 +56,7 @@ Analyzes image content combined with natural language questions. Supports screen
   images: string[],         // Required: image file paths or Base64 data URIs
   outputFormat?: 'text' | 'code' | 'json',  // Optional, default: 'text'
   context?: string,         // Optional: additional context
-  model?: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
+  model?: 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
                             // Optional, default: 'gemini-3.1-pro-preview'
 }
 ```
@@ -87,7 +87,7 @@ Analyzes code, documents, or data. Accepts input either as a file path or as inl
   language?: string,        // Optional: programming language (auto-detected when using filePath)
   focus?: string[],         // Optional: areas to focus on, e.g. ['security', 'performance']
   outputFormat?: 'text' | 'json' | 'markdown',  // Optional, default: 'markdown'
-  model?: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
+  model?: 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
                             // Optional, default: 'gemini-3.1-pro-preview'
 }
 ```
@@ -125,7 +125,7 @@ Analyzes an entire codebase using the 1M-token context window. Provides architec
   deepThink?: boolean,      // Optional: enable deep thinking mode, default: false
   thinkingLevel?: 'low' | 'high',  // Optional: thinking depth, default: 'high'
   outputFormat?: 'markdown' | 'json',  // Optional, default: 'markdown'
-  model?: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
+  model?: 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
                             // Optional, default: 'gemini-3.1-pro-preview'
 }
 ```
@@ -150,7 +150,7 @@ Generates creative ideas around a given topic. Each idea includes pros, cons, an
                             // e.g. ['./README.md', './docs/architecture.md']
   count?: number,           // Optional: number of ideas to generate, default: 5
   style?: 'innovative' | 'practical' | 'radical',  // Optional: thinking style
-  model?: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
+  model?: 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
                             // Optional, default: 'gemini-3.1-pro-preview'
 }
 ```
@@ -172,8 +172,8 @@ Performs real-time web searches using Gemini's built-in Google Search grounding 
   thinkingLevel?: 'low' | 'high',  // Optional, default: 'high'
                             // low: faster response; high: deeper reasoning
   outputFormat?: 'text' | 'json',  // Optional, default: 'text'
-  model?: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
-                            // Optional, default: 'gemini-3-flash-preview'
+  model?: 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
+                            // Optional, default: 'gemini-3.5-flash'
 }
 ```
 
@@ -261,19 +261,22 @@ When service account JSON is provided via environment variables, the server writ
 
 ### 4.1 Supported Models
 
-| Model ID | Name | Context Window | Max Output | Default For | Notes |
-|----------|------|----------------|-----------|-------------|-------|
-| `gemini-3.1-pro-preview` | Gemini 3.1 Pro Preview | 1M tokens | 65,536 tokens | 4 primary tools | **Current default** — enhanced reasoning and agentic capabilities |
-| `gemini-3-pro-preview` | Gemini 3.0 Pro Preview | 1M tokens | 65,536 tokens | — | Deprecated (retired 2026-03-09); automatically remapped to 3.1 |
-| `gemini-3-flash-preview` | Gemini 3.0 Flash Preview | 1M tokens | 65,536 tokens | gemini_search | Fast responses; suited for search and simple tasks |
-| `gemini-2.5-pro` | Gemini 2.5 Pro | 1M tokens | 65,536 tokens | — | Stable production model; available as an alternative |
+| Model ID | Name | Context Window | Max Output | Default For | Status | Notes |
+|----------|------|----------------|-----------|-------------|--------|-------|
+| `gemini-3.1-pro-preview` | Gemini 3.1 Pro Preview | 1M tokens | 65,536 tokens | 4 primary tools | Preview | **Current default** — enhanced reasoning and agentic capabilities |
+| `gemini-3.5-flash` | Gemini 3.5 Flash | 1M tokens | 65,536 tokens | gemini_search | **GA** | v2.1.0: GA flagship Flash; fast, cost-effective ($1.50/$9.00 per 1M tokens) |
+| `gemini-3-pro-preview` | Gemini 3.0 Pro Preview | 1M tokens | 65,536 tokens | — | Shut down | Deprecated (retired 2026-03-09); auto-mapped to 3.1-pro-preview |
+| `gemini-3-flash-preview` | Gemini 3.0 Flash Preview | 1M tokens | 65,536 tokens | — | Deprecated | v2.1.0: Auto-mapped to gemini-3.5-flash |
+| `gemini-2.5-pro` | Gemini 2.5 Pro | 1M tokens | 65,536 tokens | — | Deprecated | v2.1.0: Shutdown 2026-10-16; auto-mapped to gemini-3.5-flash |
 
 ### 4.2 Deprecated Model Auto-mapping
 
 To maintain backward compatibility, deprecated models are automatically remapped with a warning at runtime:
 
 ```
-gemini-3-pro-preview  →  gemini-3.1-pro-preview
+gemini-3-pro-preview   →  gemini-3.1-pro-preview  (shut down 2026-03-09)
+gemini-3-flash-preview →  gemini-3.5-flash         (v2.1.0: GA replacement available)
+gemini-2.5-pro         →  gemini-3.5-flash         (v2.1.0: shutdown 2026-10-16)
 ```
 
 ### 4.3 Model Selection Guide
@@ -282,9 +285,10 @@ gemini-3-pro-preview  →  gemini-3.1-pro-preview
 |----------|------------------|
 | Complex code analysis, architecture review | `gemini-3.1-pro-preview` |
 | Image analysis, multimodal tasks | `gemini-3.1-pro-preview` |
-| Web search, quick Q&A | `gemini-3-flash-preview` |
-| Batch processing, cost optimization | `gemini-3-flash-preview` |
-| Large codebase analysis requiring stability | `gemini-2.5-pro` |
+| Large codebase analysis | `gemini-3.1-pro-preview` |
+| Web search, quick Q&A | `gemini-3.5-flash` |
+| Batch processing, cost optimization | `gemini-3.5-flash` |
+| Fallback option | `gemini-3.5-flash` |
 
 ---
 
@@ -424,6 +428,9 @@ src/
 
 | Version | Release Date | Key Changes |
 |---------|-------------|-------------|
+| **v2.1.0** | 2026-07 | Added gemini-3.5-flash (GA); deprecated gemini-3-flash-preview and gemini-2.5-pro with auto-mapping; search default → gemini-3.5-flash |
+| v2.0.0 | 2026-06 | Migrated protocol layer to @modelcontextprotocol/sdk; replaced hand-written JSON-RPC with SDK Server + StdioServerTransport |
+| v1.5.1 | 2026-06 | Fixed JSON-RPC notification handling |
 | **v1.4.0** | 2026-03 | Introduced Vertex AI dual-mode authentication; Windows slash fix; temporary file credential strategy; added `GOOGLE_CREDENTIALS_JSON` support and raw JSON auto-detection |
 | v1.3.1 | 2026-03 | Bug fixes; upgraded @google/genai SDK |
 | v1.3.0 | 2026-03 | Migrated to gemini-3.1-pro-preview as the default model; deprecated gemini-3-pro-preview (retired 2026-03-09); added automatic deprecated-model remapping |

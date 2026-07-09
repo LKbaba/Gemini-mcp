@@ -106,11 +106,11 @@ export interface AnalyzeCodebaseParams {
   thinkingLevel?: 'low' | 'high';
 
   /**
-   * v1.3.0: Model selection parameter
-   * Options: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
+   * v2.1.0: Model selection parameter
+   * Options: 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview'
    * Default: 'gemini-3.1-pro-preview'
    */
-  model?: 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
+  model?: 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
 }
 
 // Return interface

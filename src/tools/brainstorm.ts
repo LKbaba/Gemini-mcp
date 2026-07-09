@@ -45,8 +45,8 @@ Quality requirements:
 - Consider technical, business, and user perspectives
 - Provide specific, actionable suggestions`;
 
-// Supported model types (v1.3.0: migrated to gemini-3.1-pro-preview)
-type SupportedModel = 'gemini-3.1-pro-preview' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
+// Supported model types (v2.1.0: added gemini-3.5-flash GA)
+type SupportedModel = 'gemini-3.1-pro-preview' | 'gemini-3.5-flash' | 'gemini-3-pro-preview' | 'gemini-3-flash-preview';
 
 // Parameter interface
 export interface BrainstormParams {

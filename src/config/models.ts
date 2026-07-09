@@ -1,7 +1,7 @@
 /**
  * Gemini model configuration
  * Based on official documentation: https://ai.google.dev/gemini-api/docs/models
- * Last updated: March 2026 (v1.3.0 - migrated to Gemini 3.1 Pro Preview)
+ * Last updated: July 2026 (v2.1.0 - added Gemini 3.5 Flash GA, deprecated 3-flash-preview and 2.5-pro)
  */
 
 /**
@@ -55,6 +55,7 @@ export interface ModelConfig {
 
 /**
  * Supported Gemini model list
+ * v2.1.0: Added Gemini 3.5 Flash (GA); deprecated 3-flash-preview and 2.5-pro
  * v1.3.0: Added Gemini 3.1 Pro Preview, replacing the retired 3.0 Pro Preview
  */
 export const SUPPORTED_MODELS: Record<string, ModelConfig> = {
@@ -83,6 +84,33 @@ export const SUPPORTED_MODELS: Record<string, ModelConfig> = {
     pricing: {
       inputPerMillion: '$1.25',
       outputPerMillion: '$5.00'
+    }
+  },
+  // v2.1.0: Gemini 3.5 Flash (GA flagship, replaces 3.0 Flash Preview for search/batch/fallback)
+  'gemini-3.5-flash': {
+    id: 'gemini-3.5-flash',
+    name: 'Gemini 3.5 Flash',
+    description: 'GA flagship Flash model with excellent speed and price/performance ratio',
+    contextWindow: 1_048_576, // 1M tokens
+    outputLimit: 65_536,
+    capabilities: {
+      maxInputTokens: 1_048_576,
+      maxOutputTokens: 65_536,
+      supportsVision: true,
+      supportsFunctionCalling: true,
+      supportsStreaming: true,
+      supportsThinking: true,
+      supportsSystemInstructions: true
+    },
+    features: ['thinking', 'multimodal', 'function_calling', 'grounding', 'system_instructions'],
+    bestFor: ['Quick Q&A', 'Real-time analysis', 'Batch processing', 'Cost optimization', 'Fallback option'],
+    useCases: ['Quick Q&A', 'Real-time analysis', 'Batch processing', 'Daily coding tasks', 'Fallback'],
+    thinking: true,
+    lastUpdate: 'May 2026',
+    isDefault: false,
+    pricing: {
+      inputPerMillion: '$1.50',
+      outputPerMillion: '$9.00'
     }
   },
   // v1.3.0: Deprecated (retired 2026-03-09), retained for backward compatibility
@@ -163,6 +191,8 @@ export const SUPPORTED_MODELS: Record<string, ModelConfig> = {
  */
 export const DEPRECATED_MODEL_MAPPING: Record<string, string> = {
   'gemini-3-pro-preview': 'gemini-3.1-pro-preview', // deprecated 2026-03-09
+  'gemini-3-flash-preview': 'gemini-3.5-flash', // v2.1.0: upgrade to GA Flash
+  'gemini-2.5-pro': 'gemini-3.5-flash', // v2.1.0: deprecated, shutdown 2026-10-16, fallback to GA Flash
 };
 
 /**
@@ -223,8 +253,8 @@ export const MODEL_RECOMMENDATIONS = {
   ui_generation: 'gemini-3.1-pro-preview',
   animation: 'gemini-3.1-pro-preview',
   multimodal: 'gemini-3.1-pro-preview',
-  codebase_analysis: 'gemini-2.5-pro',
-  batch_processing: 'gemini-3-flash-preview',
-  quick_tasks: 'gemini-3-flash-preview',
-  fallback: 'gemini-2.5-pro'
+  codebase_analysis: 'gemini-3.1-pro-preview', // v2.1.0: 2.5-pro deprecated, use 3.1 Pro
+  batch_processing: 'gemini-3.5-flash', // v2.1.0: upgrade to GA Flash
+  quick_tasks: 'gemini-3.5-flash', // v2.1.0: upgrade to GA Flash
+  fallback: 'gemini-3.5-flash' // v2.1.0: GA flagship Flash as fallback
 };

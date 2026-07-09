@@ -159,18 +159,19 @@ export function validateBrainstormStyle(value: string): void {
 
 /**
  * Validate model ID
- * v1.3.0: Updated supported model list
+ * v2.1.0: Updated supported model list
  *
- * Supported models (v1.3.0):
- * - gemini-3.1-pro-preview (default, latest)
- * - gemini-3-pro-preview (deprecated, auto-mapped to 3.1)
- * - gemini-3-flash-preview (search tool default)
- * - gemini-2.5-pro (stable, deprecated 2026-06-17)
+ * Supported models (v2.1.0):
+ * - gemini-3.1-pro-preview (default, latest reasoning)
+ * - gemini-3.5-flash (GA Flash, search/batch/fallback)
+ * - gemini-3-pro-preview (deprecated, auto-mapped to 3.1-pro-preview)
+ * - gemini-3-flash-preview (deprecated, auto-mapped to 3.5-flash)
+ * - gemini-2.5-pro (deprecated, shutdown 2026-10-16, auto-mapped to 3.5-flash)
  */
 export function validateModel(modelId: string): void {
   if (!isModelSupported(modelId)) {
     throw new Error(
-      `Model "${modelId}" is not supported. Use one of: gemini-3.1-pro-preview, gemini-3-pro-preview, gemini-3-flash-preview, gemini-2.5-pro`
+      `Model "${modelId}" is not supported. Use one of: gemini-3.1-pro-preview, gemini-3.5-flash`
     );
   }
 }
